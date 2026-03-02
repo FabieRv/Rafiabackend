@@ -11,7 +11,7 @@ import { UserModule } from 'src/user/user.module';
     }),
     UserModule,
     AuthModule,
-  ],
+  ],                                                                               
   controllers: [],
   providers: [],
 })
