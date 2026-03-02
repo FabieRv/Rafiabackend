@@ -1,12 +1,12 @@
 import { register } from 'module';
-import { Role } from '@prisma/client';
 import { AuthService } from './auth.service';
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 
 export type AuthBody = {
   email: string;
   password: string;
 };
+
 export type CreateUser = {
   name: string;
   email: string;
@@ -31,5 +31,21 @@ export class AuthController {
     return await this.authService.login({
       authBody,
     });
+  }
+
+  // tu envoies ton token securisé "abc123"
+  // localhost:3000/auth
+  @Get()
+  async authenticated() {
+   await fetch('auth',{
+   
+    headers:{
+      'content-type':'application/js',
+      'Authorization': 'Bearer abc123',
+    },
+    
+
+   });
+    return;
   }
 }

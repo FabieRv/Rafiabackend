@@ -24,6 +24,7 @@ export declare class AuthController {
         id: number;
     }>;
     login(authBody: AuthBody): Promise<{
-        access_token: any;
+        access_token: string;
     }>;
+    authenticated(): Promise<void>;
 }

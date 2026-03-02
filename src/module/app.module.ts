@@ -7,6 +7,7 @@ import { UserModule } from 'src/user/user.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
     UserModule,
     AuthModule,

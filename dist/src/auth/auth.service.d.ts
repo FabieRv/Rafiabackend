@@ -18,7 +18,7 @@ export declare class AuthService {
     login({ authBody }: {
         authBody: AuthBody;
     }): Promise<{
-        access_token: any;
+        access_token: string;
     }>;
     private hasPassword;
     private isPasswordValid;

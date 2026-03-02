@@ -28,6 +28,15 @@ let AuthController = class AuthController {
             authBody,
         });
     }
+    async authenticated() {
+        await fetch('auth', {
+            headers: {
+                'content-type': 'application/js',
+                'Authorization': 'Bearer abc123',
+            },
+        });
+        return;
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -44,6 +53,12 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Get)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "authenticated", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
