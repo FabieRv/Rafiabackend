@@ -37,7 +37,6 @@ export class AuthService {
 
   async login({ authBody }: { authBody: AuthBody }) {
     const { email, password } = authBody;
-    const hasPassword = await this.hasPassword(password);
 
     const existingUser = await this.prisma.user.findUnique({
       where: {
@@ -48,12 +47,12 @@ export class AuthService {
     if (!existingUser) {
       throw new NotFoundException("l'utilisateur n'existe pas");
     }
-    const isPasswordValid = await this.isPasswordValid(
+    const isValid = await this.isPasswordValid(
       password,
       existingUser.password,
     );
 
-    if (!isPasswordValid) {
+    if (!isValid) {
       throw new UnauthorizedException('le mot de pass est invalide');
     }
     return this.authenticateUser({
@@ -62,7 +61,7 @@ export class AuthService {
     // console.log({ secret: process.env.JWT_SECRET });
   }
 
-  private async hasPassword(password: string) {
+  private async hashPassword(password: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
     return hashedPassword;
   }
@@ -78,5 +77,4 @@ export class AuthService {
       access_token: await this.jwtService.sign(payload),
     };
   }
-  
 }

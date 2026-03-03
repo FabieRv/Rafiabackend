@@ -41,7 +41,6 @@ var __importStar = (this && this.__importStar) || (function () {
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
@@ -73,7 +72,6 @@ let AuthService = class AuthService {
     }
     async login({ authBody }) {
         const { email, password } = authBody;
-        const hasPassword = await this.hasPassword(password);
         const existingUser = await this.prisma.user.findUnique({
             where: {
                 email: email,
@@ -82,15 +80,15 @@ let AuthService = class AuthService {
         if (!existingUser) {
             throw new common_1.NotFoundException("l'utilisateur n'existe pas");
         }
-        const isPasswordValid = await this.isPasswordValid(password, existingUser.password);
-        if (!isPasswordValid) {
+        const isValid = await this.isPasswordValid(password, existingUser.password);
+        if (!isValid) {
             throw new common_1.UnauthorizedException('le mot de pass est invalide');
         }
         return this.authenticateUser({
             userId: existingUser.id,
         });
     }
-    async hasPassword(password) {
+    async hashPassword(password) {
         const hashedPassword = await bcrypt.hash(password, 10);
         return hashedPassword;
     }
@@ -108,6 +106,7 @@ let AuthService = class AuthService {
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService, typeof (_a = typeof jwt_1.JwtService !== "undefined" && jwt_1.JwtService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        jwt_1.JwtService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map
