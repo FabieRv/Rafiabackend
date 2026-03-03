@@ -11,9 +11,9 @@ export class UserController {
     return this.UserService.getUsers();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('/usersId')
   getUser(@Param('userId') userId: string) {
     return this.UserService.getUsers();
   }
 }
-
