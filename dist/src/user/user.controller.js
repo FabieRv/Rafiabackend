@@ -40,7 +40,7 @@ __decorate([
 ], UserController.prototype, "getUsers", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    (0, common_1.Get)('/usersId'),
+    (0, common_1.Get)('/userId'),
     __param(0, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
