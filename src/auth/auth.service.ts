@@ -47,10 +47,7 @@ export class AuthService {
     if (!existingUser) {
       throw new NotFoundException("l'utilisateur n'existe pas");
     }
-    const isValid = await this.isPasswordValid(
-      password,
-      existingUser.password,
-    );
+    const isValid = await this.isPasswordValid(password, existingUser.password);
 
     if (!isValid) {
       throw new UnauthorizedException('le mot de pass est invalide');
@@ -72,9 +69,64 @@ export class AuthService {
   }
 
   private async authenticateUser({ userId }: { userId: number }) {
-    const payload = { userId };
+    const payload = { sub: userId };
     return {
       access_token: await this.jwtService.sign(payload),
     };
+  }
+
+  async changePassword(
+    userId: number,
+    oldPassword: string,
+    newPassword: string,
+  ) {
+    try {
+      console.log('USER ID:', userId);
+      console.log('OLD:', oldPassword);
+      console.log('NEW:', newPassword);
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+
+      console.log('USER FOUND:', user);
+
+      if (!user) throw new Error('Utilisateur non trouvé');
+
+      const isOldPasswordValid = await bcrypt.compare(
+        oldPassword,
+        user.password,
+      );
+
+      console.log('OLD PASSWORD VALID:', isOldPasswordValid);
+
+      if (!isOldPasswordValid) throw new Error('Ancien mot de passe incorrect');
+
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedNewPassword },
+      });
+
+      return { message: 'Mot de passe changé avec succès' };
+    } catch (error) {
+      console.error('CHANGE PASSWORD ERROR:', error);
+      throw error;
+    }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) throw new NotFoundException('Email non trouvé');
+
+    const token = this.jwtService.sign(
+      { userId: user.id },
+      { expiresIn: '15m' },
+    );
+    const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
+    console.log('Lien de réinitialisation :', resetLink);
+
+    return { message: 'Lien de réinitialisation envoyé à votre email' };
   }
 }

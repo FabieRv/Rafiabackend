@@ -23,4 +23,13 @@ export declare class AuthService {
     private hashPassword;
     private isPasswordValid;
     private authenticateUser;
+    changePassword(userId: number, oldPassword: string, newPassword: string): Promise<{
+        message: string;
+    }>;
+    forgotPassword(email: string): Promise<{
+        message: string;
+    }>;
+    resterPassword(token: string, newPassword: string): Promise<{
+        message: string;
+    }>;
 }

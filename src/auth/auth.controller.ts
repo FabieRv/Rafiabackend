@@ -1,6 +1,8 @@
-import { register } from 'module';
+import { Body, Controller, Post, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { JwtAuthGuard } from '../middleware/jwt-auth.guard';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 export type AuthBody = {
   email: string;
@@ -33,19 +35,25 @@ export class AuthController {
     });
   }
 
-  // tu envoies ton token securisé "abc123"
-  // localhost:3000/auth
-  @Get()
-  async authenticated() {
-   await fetch('auth',{
-   
-    headers:{
-      'content-type':'application/js',
-      'Authorization': 'Bearer abc123',
-    },
-    
+  //localhost:3000/change-password
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  async changePassword(@Body() body: ChangePasswordDto, @Request() req: any) {
+    console.log('REQ.USER:', req.user);
 
-   });
-    return;
+    const userId = req.user.userId;
+
+    return this.authService.changePassword(
+      userId,
+      body.oldPassword,
+      body.newPassword,
+    );
+  }
+
+  // localhost:3000/forgot-password
+  @Post('forgot-password')
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
+    console.log('EMAIL RECU:', body.email);
+    return this.authService.forgotPassword(body.email); // ✅
   }
 }

@@ -97,10 +97,60 @@ let AuthService = class AuthService {
         return isPasswordValid;
     }
     async authenticateUser({ userId }) {
-        const payload = { userId };
+        const payload = { sub: userId };
         return {
             access_token: await this.jwtService.sign(payload),
         };
+    }
+    async changePassword(userId, oldPassword, newPassword) {
+        try {
+            console.log('USER ID:', userId);
+            console.log('OLD:', oldPassword);
+            console.log('NEW:', newPassword);
+            const user = await this.prisma.user.findUnique({
+                where: { id: userId },
+            });
+            console.log('USER FOUND:', user);
+            if (!user)
+                throw new Error('Utilisateur non trouvé');
+            const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
+            console.log('OLD PASSWORD VALID:', isOldPasswordValid);
+            if (!isOldPasswordValid)
+                throw new Error('Ancien mot de passe incorrect');
+            const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+            await this.prisma.user.update({
+                where: { id: userId },
+                data: { password: hashedNewPassword },
+            });
+            return { message: 'Mot de passe changé avec succès' };
+        }
+        catch (error) {
+            console.error('CHANGE PASSWORD ERROR:', error);
+            throw error;
+        }
+    }
+    async forgotPassword(email) {
+        const user = await this.prisma.user.findUnique({ where: { email } });
+        if (!user)
+            throw new common_1.NotFoundException('Email non trouvé');
+        const token = this.jwtService.sign({ userId: user.id }, { expiresIn: '15m' });
+        const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
+        console.log('Lien de réinitialisation :', resetLink);
+        return { message: 'Lien de réinitialisation envoyé à votre email' };
+    }
+    async resterPassword(token, newPassword) {
+        try {
+            const payload = this.jwtService.verify(token);
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            await this.prisma.user.update({
+                where: { id: payload.userId },
+                data: { password: hashedPassword },
+            });
+            return { message: 'mot de passe reinitialisé avec succcès' };
+        }
+        catch (err) {
+            throw new common_1.BadRequestException('token invalide');
+        }
     }
 };
 exports.AuthService = AuthService;

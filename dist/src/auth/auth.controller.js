@@ -13,8 +13,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
-const auth_service_1 = require("./auth.service");
 const common_1 = require("@nestjs/common");
+const auth_service_1 = require("./auth.service");
+const change_password_dto_1 = require("./dto/change-password.dto");
+const jwt_auth_guard_1 = require("../middleware/jwt-auth.guard");
+const forgot_password_dto_1 = require("./dto/forgot-password.dto");
+const reset_password_dto_1 = require("./dto/reset-password.dto");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -28,14 +32,17 @@ let AuthController = class AuthController {
             authBody,
         });
     }
-    async authenticated() {
-        await fetch('auth', {
-            headers: {
-                'content-type': 'application/js',
-                'Authorization': 'Bearer abc123',
-            },
-        });
-        return;
+    async changePassword(body, req) {
+        console.log('REQ.USER:', req.user);
+        const userId = req.user.userId;
+        return this.authService.changePassword(userId, body.oldPassword, body.newPassword);
+    }
+    async forgotPassword(body) {
+        console.log('EMAIL RECU:', body.email);
+        return this.authService.forgotPassword(body.email);
+    }
+    async resetPassword(body) {
+        return this.authService.resterPassword(body.token, body.newPassword);
     }
 };
 exports.AuthController = AuthController;
@@ -54,11 +61,28 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
-    (0, common_1.Get)(),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('change-password'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [change_password_dto_1.ChangePasswordDto, Object]),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "authenticated", null);
+], AuthController.prototype, "changePassword", null);
+__decorate([
+    (0, common_1.Post)('forgot-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "forgotPassword", null);
+__decorate([
+    (0, common_1.Post)('reset-password'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [reset_password_dto_1.ResetPasswordDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "resetPassword", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
