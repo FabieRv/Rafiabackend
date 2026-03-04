@@ -20,4 +20,5 @@ export declare class UserController {
         role: import("@prisma/client").$Enums.Role;
         id: number;
     }[]>;
+    getProfile(): string;
 }

@@ -5,7 +5,6 @@ import { AuthService } from './auth.service';
 import { PrismaService } from 'src/user/prisma.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from '../middleware/jwt.strategy';
-import { ProfileController } from 'src/controller/profile.controller';
 
 @Module({
   imports: [
@@ -19,7 +18,7 @@ import { ProfileController } from 'src/controller/profile.controller';
       }),
     }),
   ],
-  controllers: [AuthController, ProfileController],
+  controllers: [AuthController],
   providers: [PrismaService, AuthService, JwtStrategy],
   exports: [AuthService, JwtModule],
 })
