@@ -138,20 +138,6 @@ let AuthService = class AuthService {
         console.log('Lien de réinitialisation :', resetLink);
         return { message: 'Lien de réinitialisation envoyé à votre email' };
     }
-    async resterPassword(token, newPassword) {
-        try {
-            const payload = this.jwtService.verify(token);
-            const hashedPassword = await bcrypt.hash(newPassword, 10);
-            await this.prisma.user.update({
-                where: { id: payload.userId },
-                data: { password: hashedPassword },
-            });
-            return { message: 'mot de passe reinitialisé avec succcès' };
-        }
-        catch (err) {
-            throw new common_1.BadRequestException('token invalide');
-        }
-    }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([

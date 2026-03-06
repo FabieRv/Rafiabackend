@@ -1,7 +1,6 @@
 import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
 export type AuthBody = {
     email: string;
     password: string;
@@ -33,9 +32,6 @@ export declare class AuthController {
         message: string;
     }>;
     forgotPassword(body: ForgotPasswordDto): Promise<{
-        message: string;
-    }>;
-    resetPassword(body: ResetPasswordDto): Promise<{
         message: string;
     }>;
 }

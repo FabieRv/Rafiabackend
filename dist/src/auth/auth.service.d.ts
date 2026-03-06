@@ -29,7 +29,4 @@ export declare class AuthService {
     forgotPassword(email: string): Promise<{
         message: string;
     }>;
-    resterPassword(token: string, newPassword: string): Promise<{
-        message: string;
-    }>;
 }
