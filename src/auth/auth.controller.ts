@@ -30,9 +30,7 @@ export class AuthController {
   //localhost:3000/login
   @Post('login')
   async login(@Body() authBody: AuthBody) {
-    return await this.authService.login({
-      authBody,
-    });
+    return await this.authService.login(authBody);
   }
 
   //localhost:3000/change-password

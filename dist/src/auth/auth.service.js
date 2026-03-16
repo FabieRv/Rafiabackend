@@ -70,7 +70,7 @@ let AuthService = class AuthService {
         const { password: _, ...userWithoutPassword } = newUser;
         return userWithoutPassword;
     }
-    async login({ authBody }) {
+    async login(authBody) {
         const { email, password } = authBody;
         const existingUser = await this.prisma.user.findUnique({
             where: {

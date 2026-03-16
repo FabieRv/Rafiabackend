@@ -35,7 +35,7 @@ export class AuthService {
     return userWithoutPassword;
   }
 
-  async login({ authBody }: { authBody: AuthBody }) {
+  async login(authBody: AuthBody) {
     const { email, password } = authBody;
 
     const existingUser = await this.prisma.user.findUnique({

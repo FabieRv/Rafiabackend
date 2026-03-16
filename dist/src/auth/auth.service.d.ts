@@ -15,9 +15,7 @@ export declare class AuthService {
         updatedAt: Date | null;
         id: number;
     }>;
-    login({ authBody }: {
-        authBody: AuthBody;
-    }): Promise<{
+    login(authBody: AuthBody): Promise<{
         access_token: string;
     }>;
     private hashPassword;
