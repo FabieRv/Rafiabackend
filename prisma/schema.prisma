@@ -23,4 +23,32 @@ model User {
   role      Role     @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime? @default(now())
+
+  products  Product[]
+}
+
+model Category {
+  id_categorie  Int       @id @default(autoincrement())
+  nom_categorie String    @unique  
+  description   String?   @db.Text
+ 
+  products      Product[]
+}
+
+model Product {
+  id_produit     Int      @id @default(autoincrement())
+  nom_produit    String
+  description    String   @db.Text
+  prix           Decimal  @db.Decimal(10, 2)
+  quantite_stock Int
+  image          String
+  date_ajout     DateTime @default(now())
+
+  // RELATION AVEC USER (CORRIGÉE)
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id]) 
+
+  // RELATION AVEC CATEGORY
+  id_categorie   Intz
+  category       Category @relation(fields: [id_categorie], references: [id_categorie])
 }
