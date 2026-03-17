@@ -9,7 +9,7 @@ export declare class UserController {
         phone: string;
         adress: string;
         role: import("@prisma/client").$Enums.Role;
-        id: number;
+        id_user: number;
     }[]>;
     getUser(userId: string): Promise<{
         name: string;
@@ -18,7 +18,7 @@ export declare class UserController {
         phone: string;
         adress: string;
         role: import("@prisma/client").$Enums.Role;
-        id: number;
+        id_user: number;
     }[]>;
     getProfile(): string;
 }

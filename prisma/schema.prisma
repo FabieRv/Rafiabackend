@@ -1,11 +1,10 @@
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "mysql"
-  url     = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -13,42 +12,83 @@ enum Role {
   USER
 }
 
-model User {
-  id      Int    @id @default(autoincrement())
-  name    String
-  email   String @unique
-  phone   String
-  adress  String
-  password String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime? @default(now())
+enum StatutCatalogue {
+  ACTIF
+  INACTIF
+  EN_ATTENTE
+}
 
-  products  Product[]
+model User {
+  id_user    Int         @id @default(autoincrement())
+  name       String
+  email      String      @unique
+  phone      String
+  adress     String
+  password   String
+  role       Role        @default(USER)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime?   @updatedAt
+
+  catalogues Catalogue[]
+}
+
+model Type {
+  id_type             Int        @id @default(autoincrement())
+  nom_type            String     @unique
+  description         String?    @db.Text
+  date_creation_type  DateTime?  @default(now())
+
+  categories          Category[]
 }
 
 model Category {
-  id_categorie  Int       @id @default(autoincrement())
-  nom_categorie String    @unique  
-  description   String?   @db.Text
- 
-  products      Product[]
+  id_categorie  Int            @id @default(autoincrement())
+  nom_categorie String         @unique
+  description   String?        @db.Text
+  
+  id_type       Int
+  type          Type           @relation(fields: [id_type], references: [id_type])
+
+  sous_categories SousCategory[]
+}
+
+model SousCategory {
+  id_sous_categorie   Int       @id @default(autoincrement())
+  nom_sous_categorie  String    @unique
+  description         String?   @db.Text
+  date_creation       DateTime? @default(now())
+
+  id_categorie        Int
+  category            Category  @relation(fields: [id_categorie], references: [id_categorie])
+
+  products            Product[]
+}
+
+model Catalogue {
+  id_catalogue   Int             @id @default(autoincrement())
+  nom_catalogue  String
+  description    String?         @db.Text
+  date_creation  DateTime        @default(now())
+  statut         StatutCatalogue @default(EN_ATTENTE)
+
+  id_user        Int
+  user           User            @relation(fields: [id_user], references: [id_user])
+
+  products       Product[]
 }
 
 model Product {
-  id_produit     Int      @id @default(autoincrement())
-  nom_produit    String
-  description    String   @db.Text
-  prix           Decimal  @db.Decimal(10, 2)
-  quantite_stock Int
-  image          String
-  date_ajout     DateTime @default(now())
+  id_produit         Int          @id @default(autoincrement())
+  nom_produit        String
+  description        String       @db.Text
+  prix               Decimal      @db.Decimal(10, 2)
+  quantite_stock     Int
+  image              String
+  date_ajout         DateTime     @default(now())
 
-  // RELATION AVEC USER (CORRIGÉE)
-  userId         Int
-  user           User     @relation(fields: [userId], references: [id]) 
+  id_catalogue       Int
+  catalogue          Catalogue    @relation(fields: [id_catalogue], references: [id_catalogue])
 
-  // RELATION AVEC CATEGORY
-  id_categorie   Intz
-  category       Category @relation(fields: [id_categorie], references: [id_categorie])
+  id_sous_categorie  Int
+  sous_category      SousCategory @relation(fields: [id_sous_categorie], references: [id_sous_categorie])
 }

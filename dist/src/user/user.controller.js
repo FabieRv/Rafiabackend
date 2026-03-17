@@ -28,7 +28,7 @@ let UserController = class UserController {
         return this.UserService.getUsers();
     }
     getProfile() {
-        return "test ok";
+        return 'test ok';
     }
 };
 exports.UserController = UserController;

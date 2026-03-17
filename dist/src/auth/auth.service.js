@@ -85,7 +85,7 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('le mot de pass est invalide');
         }
         return this.authenticateUser({
-            userId: existingUser.id,
+            userId: existingUser.id_user,
         });
     }
     async hashPassword(password) {
@@ -108,7 +108,7 @@ let AuthService = class AuthService {
             console.log('OLD:', oldPassword);
             console.log('NEW:', newPassword);
             const user = await this.prisma.user.findUnique({
-                where: { id: userId },
+                where: { id_user: userId },
             });
             console.log('USER FOUND:', user);
             if (!user)
@@ -119,7 +119,7 @@ let AuthService = class AuthService {
                 throw new Error('Ancien mot de passe incorrect');
             const hashedNewPassword = await bcrypt.hash(newPassword, 10);
             await this.prisma.user.update({
-                where: { id: userId },
+                where: { id_user: userId },
                 data: { password: hashedNewPassword },
             });
             return { message: 'Mot de passe changé avec succès' };
@@ -133,7 +133,7 @@ let AuthService = class AuthService {
         const user = await this.prisma.user.findUnique({ where: { email } });
         if (!user)
             throw new common_1.NotFoundException('Email non trouvé');
-        const token = this.jwtService.sign({ userId: user.id }, { expiresIn: '15m' });
+        const token = this.jwtService.sign({ userId: user.id_user }, { expiresIn: '15m' });
         const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
         console.log('Lien de réinitialisation :', resetLink);
         return { message: 'Lien de réinitialisation envoyé à votre email' };

@@ -53,7 +53,7 @@ export class AuthService {
       throw new UnauthorizedException('le mot de pass est invalide');
     }
     return this.authenticateUser({
-      userId: existingUser.id,
+      userId: existingUser.id_user,
     });
     // console.log({ secret: process.env.JWT_SECRET });
   }
@@ -86,7 +86,7 @@ export class AuthService {
       console.log('NEW:', newPassword);
 
       const user = await this.prisma.user.findUnique({
-        where: { id: userId },
+        where: { id_user: userId },
       });
 
       console.log('USER FOUND:', user);
@@ -105,7 +105,7 @@ export class AuthService {
       const hashedNewPassword = await bcrypt.hash(newPassword, 10);
 
       await this.prisma.user.update({
-        where: { id: userId },
+        where: { id_user: userId },
         data: { password: hashedNewPassword },
       });
 
@@ -121,7 +121,7 @@ export class AuthService {
     if (!user) throw new NotFoundException('Email non trouvé');
 
     const token = this.jwtService.sign(
-      { userId: user.id },
+      { userId: user.id_user },
       { expiresIn: '15m' },
     );
     const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
