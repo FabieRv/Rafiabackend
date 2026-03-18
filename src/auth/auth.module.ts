@@ -1,14 +1,13 @@
-import { JwtModule, JwtService } from '@nestjs/jwt';
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { PrismaService } from 'src/user/prisma.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PrismaService } from '../user/prisma.service'; //chemin prisma
 import { JwtStrategy } from '../middleware/jwt.strategy';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

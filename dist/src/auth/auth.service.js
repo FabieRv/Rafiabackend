@@ -47,6 +47,7 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../user/prisma.service");
 const bcrypt = __importStar(require("bcryptjs"));
 const jwt_1 = require("@nestjs/jwt");
+const client_1 = require("@prisma/client");
 let AuthService = class AuthService {
     prisma;
     jwtService;
@@ -56,21 +57,47 @@ let AuthService = class AuthService {
         console.log('JWT SERVICE READY');
     }
     async register(authRegister) {
-        const { name, email, password, phone, adress } = authRegister;
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = await this.prisma.user.create({
-            data: {
-                name,
-                email,
-                adress,
-                phone,
-                password: hashedPassword,
-            },
-        });
-        const { password: _, ...userWithoutPassword } = newUser;
-        return userWithoutPassword;
+        try {
+            const { name, email, password, phone, adress, role } = authRegister;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                throw new common_1.BadRequestException('Email invalide');
+            }
+            const existingUser = await this.prisma.user.findUnique({
+                where: { email },
+            });
+            if (existingUser) {
+                throw new common_1.BadRequestException('Email existe déjà');
+            }
+            const hashedPassword = await bcrypt.hash(password, 10);
+            let finalRole = client_1.Role.USER;
+            if (role) {
+                const roleUpper = role.toUpperCase();
+                if (roleUpper === 'ADMIN')
+                    finalRole = client_1.Role.ADMIN;
+            }
+            const newUser = await this.prisma.user.create({
+                data: {
+                    name,
+                    email,
+                    phone,
+                    adress,
+                    password: hashedPassword,
+                    role: finalRole,
+                },
+            });
+            const { password: _, ...userWithoutPassword } = newUser;
+            return userWithoutPassword;
+        }
+        catch (err) {
+            if (err instanceof common_1.BadRequestException) {
+                throw err;
+            }
+            console.error(err);
+            throw new common_1.BadRequestException('Erreur interne du serveur');
+        }
     }
-    async login({ authBody }) {
+    async login(authBody) {
         const { email, password } = authBody;
         const existingUser = await this.prisma.user.findUnique({
             where: {
@@ -85,7 +112,7 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('le mot de pass est invalide');
         }
         return this.authenticateUser({
-            userId: existingUser.id,
+            userId: existingUser.id_user,
         });
     }
     async hashPassword(password) {
@@ -108,7 +135,7 @@ let AuthService = class AuthService {
             console.log('OLD:', oldPassword);
             console.log('NEW:', newPassword);
             const user = await this.prisma.user.findUnique({
-                where: { id: userId },
+                where: { id_user: userId },
             });
             console.log('USER FOUND:', user);
             if (!user)
@@ -119,7 +146,7 @@ let AuthService = class AuthService {
                 throw new Error('Ancien mot de passe incorrect');
             const hashedNewPassword = await bcrypt.hash(newPassword, 10);
             await this.prisma.user.update({
-                where: { id: userId },
+                where: { id_user: userId },
                 data: { password: hashedNewPassword },
             });
             return { message: 'Mot de passe changé avec succès' };
@@ -133,7 +160,7 @@ let AuthService = class AuthService {
         const user = await this.prisma.user.findUnique({ where: { email } });
         if (!user)
             throw new common_1.NotFoundException('Email non trouvé');
-        const token = this.jwtService.sign({ userId: user.id }, { expiresIn: '15m' });
+        const token = this.jwtService.sign({ userId: user.id_user }, { expiresIn: '15m' });
         const resetLink = `http://localhost:3000/auth/reset-password?token=${token}`;
         console.log('Lien de réinitialisation :', resetLink);
         return { message: 'Lien de réinitialisation envoyé à votre email' };

@@ -9,6 +9,6 @@ export declare class UserService {
         phone: string;
         adress: string;
         role: import("@prisma/client").$Enums.Role;
-        id: number;
+        id_user: number;
     }[]>;
 }

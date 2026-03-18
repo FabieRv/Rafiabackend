@@ -11,6 +11,7 @@ export type CreateUser = {
     phone: string;
     adress: string;
     password: string;
+    role: string;
 };
 export declare class AuthController {
     private readonly authService;
@@ -21,9 +22,9 @@ export declare class AuthController {
         phone: string;
         adress: string;
         role: import("@prisma/client").$Enums.Role;
+        id_user: number;
         createdAt: Date;
         updatedAt: Date | null;
-        id: number;
     }>;
     login(authBody: AuthBody): Promise<{
         access_token: string;

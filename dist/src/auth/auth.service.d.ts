@@ -11,13 +11,11 @@ export declare class AuthService {
         phone: string;
         adress: string;
         role: import("@prisma/client").$Enums.Role;
+        id_user: number;
         createdAt: Date;
         updatedAt: Date | null;
-        id: number;
     }>;
-    login({ authBody }: {
-        authBody: AuthBody;
-    }): Promise<{
+    login(authBody: AuthBody): Promise<{
         access_token: string;
     }>;
     private hashPassword;

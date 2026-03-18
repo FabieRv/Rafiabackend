@@ -20,7 +20,7 @@ let UserService = class UserService {
     async getUsers() {
         const users = await this.prisma.user.findMany({
             select: {
-                id: true,
+                id_user: true,
                 name: true,
                 email: true,
                 phone: true,

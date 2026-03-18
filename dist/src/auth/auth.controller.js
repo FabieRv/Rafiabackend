@@ -27,9 +27,7 @@ let AuthController = class AuthController {
         return this.authService.register(authRegister);
     }
     async login(authBody) {
-        return await this.authService.login({
-            authBody,
-        });
+        return await this.authService.login(authBody);
     }
     async changePassword(body, req) {
         console.log('REQ.USER:', req.user);
