@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/user/prisma.service';
-import {CreateProductDto } from './dto/create-product.dto';
+import { CreateProductDto } from './dto/create-product.dto';
 
 @Injectable()
 export class ProductService {
@@ -27,6 +27,20 @@ export class ProductService {
       include: {
         sous_category: {
           include: { category: true },
+        },
+      },
+    });
+  }
+  async fincdOne(id: number) {
+    return this.prisma.product.findUnique({
+      where: { id_produit: id },
+      include: {
+        sous_category: {
+          include: {
+            category: {
+              include: { type: true },
+            },
+          },
         },
       },
     });
