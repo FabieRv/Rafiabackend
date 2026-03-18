@@ -2,12 +2,14 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 
 import { AuthBody, CreateUser } from './auth.controller';
 import { PrismaService } from 'src/user/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -19,20 +21,46 @@ export class AuthService {
   }
 
   async register(authRegister: CreateUser) {
-    const { name, email, password, phone, adress } = authRegister;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = await this.prisma.user.create({
-      data: {
-        name,
-        email,
-        adress,
-        phone,
-        password: hashedPassword,
-      },
-    });
+    try {
+      const { name, email, password, phone, adress, role } = authRegister;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new BadRequestException('Email invalide');
+      }
 
-    const { password: _, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email },
+      });
+      if (existingUser) {
+        throw new BadRequestException('Email existe déjà');
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      let finalRole: Role = Role.USER;
+      if (role) {
+        const roleUpper = role.toUpperCase();
+        if (roleUpper === 'ADMIN') finalRole = Role.ADMIN;
+      }
+
+      const newUser = await this.prisma.user.create({
+        data: {
+          name,
+          email,
+          phone,
+          adress,
+          password: hashedPassword,
+          role: finalRole,
+        },
+      });
+      const { password: _, ...userWithoutPassword } = newUser;
+      return userWithoutPassword;
+    } catch (err) {
+      if (err instanceof BadRequestException) {
+        throw err;
+      }
+      console.error(err);
+      throw new BadRequestException('Erreur interne du serveur');
+    }
   }
 
   async login(authBody: AuthBody) {

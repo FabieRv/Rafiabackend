@@ -80,10 +80,10 @@ model Catalogue {
 model Product {
   id_produit         Int          @id @default(autoincrement())
   nom_produit        String
-  description        String       @db.Text
+  description        String?       @db.Text
   prix               Decimal      @db.Decimal(10, 2)
   quantite_stock     Int
-  image              String
+  image              String?
   date_ajout         DateTime     @default(now())
 
   id_catalogue       Int

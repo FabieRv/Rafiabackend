@@ -11,9 +11,9 @@ export declare class AuthService {
         phone: string;
         adress: string;
         role: import("@prisma/client").$Enums.Role;
+        id_user: number;
         createdAt: Date;
         updatedAt: Date | null;
-        id_user: number;
     }>;
     login(authBody: AuthBody): Promise<{
         access_token: string;

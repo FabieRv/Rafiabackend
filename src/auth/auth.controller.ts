@@ -15,6 +15,7 @@ export type CreateUser = {
   phone: string;
   adress: string;
   password: string;
+  role: string;
 };
 
 @Controller('auth')
