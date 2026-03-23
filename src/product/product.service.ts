@@ -25,7 +25,6 @@ export class ProductService {
   async findAll() {
     return this.prisma.product.findMany({
       include: {
-        // CORRECTION : On utilise le nom attendu par Prisma
         sous_category: {
           include: { category: true },
         },
@@ -38,7 +37,6 @@ export class ProductService {
     return this.prisma.product.findUnique({
       where: { id_produit: id },
       include: {
-        // CORRECTION : Uniformisation avec "sous_category"
         sous_category: {
           include: {
             category: {
