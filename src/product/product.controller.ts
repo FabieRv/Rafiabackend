@@ -6,6 +6,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  Patch,
+  Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -15,27 +17,48 @@ import { JwtAuthGuard } from 'src/middleware/jwt-auth.guard';
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-
-  @Get('public-models') 
-  findAllPublic() {
-    return this.productService.findAll();
+  @Get('public-models')
+  async getPublicModels(@Query('categoryId') categoryId?: string) {
+    const id = categoryId ? parseInt(categoryId, 10) : undefined;
+    return this.productService.findAll(id);
   }
 
+  @Get('get-category-count')
+  async countAllProductByCategory() {
+    return this.productService.getCategoryCounts();
+  }
+
+  // 2. AJOUTER (Protégé par JWT)
   @UseGuards(JwtAuthGuard)
   @Post('add')
   create(@Body() createProductDto: CreateProductDto) {
     return this.productService.create(createProductDto);
   }
 
+  // 3. MODIFIER (Protégé par JWT)
   @UseGuards(JwtAuthGuard)
-  @Get('admin-list')
-  findAll() {
-    return this.productService.findAll();
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateDto: Partial<CreateProductDto>,
+  ) {
+    await this.productService.update(+id, updateDto);
+    return {
+      message: 'Produit mis à jour avec succès',
+      id_modifie: +id,
+      statusCode: 200,
+    };
   }
 
+  // 4. SUPPRIMER (Protégé par JWT)
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productService.remove(+id);
+  async remove(@Param('id') id: string) {
+    await this.productService.remove(+id);
+
+    return {
+      message: 'Produit supprimé avec succès',
+      statusCode: 200,
+    };
   }
 }
