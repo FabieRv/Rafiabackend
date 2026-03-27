@@ -86,10 +86,6 @@ export class AuthService {
     // console.log({ secret: process.env.JWT_SECRET });
   }
 
-  private async hashPassword(password: string) {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    return hashedPassword;
-  }
 
   private async isPasswordValid(password: string, hashedPassword: string) {
     const isPasswordValid = await bcrypt.compare(password, hashedPassword);
