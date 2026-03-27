@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -16,20 +17,25 @@ import { JwtAuthGuard } from 'src/middleware/jwt-auth.guard';
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  //acces public
   @Get('public-models')
-  findAllPublic() {
-    return this.productService.findAll();
+  async getPublicModels(@Query('categoryId') categoryId?: string) {
+    const id = categoryId ? parseInt(categoryId, 10) : undefined;
+    return this.productService.findAll(id);
   }
 
-  //ajouter
+  @Get('get-category-count')
+  async countAllProductByCategory() {
+    return this.productService.getCategoryCounts();
+  }
+
+  // 2. AJOUTER (Protégé par JWT)
   @UseGuards(JwtAuthGuard)
   @Post('add')
   create(@Body() createProductDto: CreateProductDto) {
     return this.productService.create(createProductDto);
   }
 
-  //modifier
+  // 3. MODIFIER (Protégé par JWT)
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async update(
@@ -44,7 +50,7 @@ export class ProductController {
     };
   }
 
-  //supprimer
+  // 4. SUPPRIMER (Protégé par JWT)
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(@Param('id') id: string) {

@@ -22,11 +22,22 @@ export class ProductService {
   }
 
   // READ : Tous les produits
-  async findAll() {
+  async findAll(categoryId?: number) {
     return this.prisma.product.findMany({
+      where: {
+        ...(categoryId
+          ? {
+              sous_category: {
+                id_categorie: categoryId,
+              },
+            }
+          : {}),
+      },
       include: {
         sous_category: {
-          include: { category: true },
+          include: {
+            category: true,
+          },
         },
       },
     });
@@ -48,6 +59,27 @@ export class ProductService {
     });
   }
 
+  async getCategoryCounts() {
+    const categories = await this.prisma.category.findMany({
+      include: {
+        sous_categories: {
+          include: {
+            _count: {
+              select: { products: true }
+            }
+          }
+        }
+      }
+    });
+  
+    // On transforme la donnée pour avoir un format simple : { id, nom, total }
+    return categories.map(cat => ({
+      id: cat.id_categorie,
+      name: cat.nom_categorie,
+      count: cat.sous_categories.reduce((acc, sc) => acc + sc._count.products, 0)
+    }));
+  }
+
   // UPDATE
   async update(id: number, data: Partial<CreateProductDto>) {
     return this.prisma.product.update({
@@ -55,6 +87,8 @@ export class ProductService {
       data,
     });
   }
+
+  
 
   // DELETE
   async remove(id: number) {
