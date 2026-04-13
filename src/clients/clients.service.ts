@@ -3,7 +3,6 @@ import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { PrismaService } from 'src/user/prisma.service';
 
-
 @Injectable()
 export class ClientsService {
   constructor(private prisma: PrismaService) {}
@@ -68,11 +67,13 @@ export class ClientsService {
     });
     return JSON.parse(JSON.stringify(updated));
   }
-
   async remove(id: number) {
     await this.findOne(id);
-    return this.prisma.user.delete({
+
+    const deleted = await this.prisma.user.delete({
       where: { id_user: id },
     });
+
+    return { message: `Client ${id} supprimé`, deleted };
   }
 }
