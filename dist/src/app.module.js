@@ -14,6 +14,7 @@ const user_module_1 = require("./user/user.module");
 const path_1 = require("path");
 const serve_static_1 = require("@nestjs/serve-static");
 const product_module_1 = require("./product/product.module");
+const clients_module_1 = require("./clients/clients.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -31,6 +32,7 @@ exports.AppModule = AppModule = __decorate([
             user_module_1.UserModule,
             auth_module_1.AuthModule,
             product_module_1.ProductModule,
+            clients_module_1.ClientsModule,
         ],
         controllers: [],
         providers: [],

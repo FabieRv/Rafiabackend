@@ -9,7 +9,7 @@ import { AuthBody, CreateUser } from './auth.controller';
 import { PrismaService } from 'src/user/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
-import { Role } from '@prisma/client';
+import { Role, User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -86,16 +86,26 @@ export class AuthService {
     // console.log({ secret: process.env.JWT_SECRET });
   }
 
+  private async hashPassword(password: string) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    return hashedPassword;
+  }
 
   private async isPasswordValid(password: string, hashedPassword: string) {
     const isPasswordValid = await bcrypt.compare(password, hashedPassword);
     return isPasswordValid;
   }
 
-  private async authenticateUser({ userId }: { userId: number }) {
-    const payload = { sub: userId };
+  private async authenticateUser(user: any) {
+    const payload = {
+      sub: user.id_user,
+      role: user.role,
+    };
+
     return {
       access_token: await this.jwtService.sign(payload),
+      role: user.role,
+      name: user.name,
     };
   }
 

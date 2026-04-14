@@ -28,6 +28,8 @@ export declare class AuthController {
     }>;
     login(authBody: AuthBody): Promise<{
         access_token: string;
+        role: any;
+        name: any;
     }>;
     changePassword(body: ChangePasswordDto, req: any): Promise<{
         message: string;

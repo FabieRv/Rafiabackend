@@ -17,8 +17,9 @@ export declare class AuthService {
     }>;
     login(authBody: AuthBody): Promise<{
         access_token: string;
+        role: any;
+        name: any;
     }>;
-    private hashPassword;
     private isPasswordValid;
     private authenticateUser;
     changePassword(userId: number, oldPassword: string, newPassword: string): Promise<{
