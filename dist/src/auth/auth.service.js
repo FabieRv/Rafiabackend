@@ -111,7 +111,9 @@ let AuthService = class AuthService {
         if (!isValid) {
             throw new common_1.UnauthorizedException('le mot de pass est invalide');
         }
-        return this.authenticateUser(existingUser);
+        return this.authenticateUser({
+            userId: existingUser.id_user,
+        });
     }
     async isPasswordValid(password, hashedPassword) {
         const isPasswordValid = await bcrypt.compare(password, hashedPassword);
