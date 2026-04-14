@@ -9,7 +9,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(3000); // maintenant le port correspond au client
+  await app.listen(3001); // maintenant le port correspond au client
   console.log('Nest server listening on http://localhost:3000');
 }
 bootstrap();

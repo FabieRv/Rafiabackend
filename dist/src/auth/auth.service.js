@@ -111,22 +111,21 @@ let AuthService = class AuthService {
         if (!isValid) {
             throw new common_1.UnauthorizedException('le mot de pass est invalide');
         }
-        return this.authenticateUser({
-            userId: existingUser.id_user,
-        });
-    }
-    async hashPassword(password) {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        return hashedPassword;
+        return this.authenticateUser(existingUser);
     }
     async isPasswordValid(password, hashedPassword) {
         const isPasswordValid = await bcrypt.compare(password, hashedPassword);
         return isPasswordValid;
     }
-    async authenticateUser({ userId }) {
-        const payload = { sub: userId };
+    async authenticateUser(user) {
+        const payload = {
+            sub: user.id_user,
+            role: user.role,
+        };
         return {
             access_token: await this.jwtService.sign(payload),
+            role: user.role,
+            name: user.name,
         };
     }
     async changePassword(userId, oldPassword, newPassword) {

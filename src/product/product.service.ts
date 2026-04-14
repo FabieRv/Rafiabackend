@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/user/prisma.service';
-import {CreateProductDto } from './dto/create-product.dto';
+import { PrismaService } from 'src/user/prisma.service'; // Assure-toi que le chemin est correct
+import { CreateProductDto } from './dto/create-product.dto';
 
 @Injectable()
 export class ProductService {
   constructor(private prisma: PrismaService) {}
 
-  //CREATE
+  // CREATE
   async create(data: CreateProductDto) {
     return this.prisma.product.create({
       data: {
@@ -21,18 +21,66 @@ export class ProductService {
     });
   }
 
-  //READ
-  async findAll() {
+  // READ : Tous les produits
+  async findAll(categoryId?: number) {
     return this.prisma.product.findMany({
+      where: {
+        ...(categoryId
+          ? {
+              sous_category: {
+                id_categorie: categoryId,
+              },
+            }
+          : {}),
+      },
       include: {
         sous_category: {
-          include: { category: true },
+          include: {
+            category: true,
+          },
         },
       },
     });
   }
 
-  //UPDATE
+  // READ : Un seul produit par ID
+  async findOne(id: number) {
+    return this.prisma.product.findUnique({
+      where: { id_produit: id },
+      include: {
+        sous_category: {
+          include: {
+            category: {
+              include: { type: true },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getCategoryCounts() {
+    const categories = await this.prisma.category.findMany({
+      include: {
+        sous_categories: {
+          include: {
+            _count: {
+              select: { products: true }
+            }
+          }
+        }
+      }
+    });
+  
+    // On transforme la donnée pour avoir un format simple : { id, nom, total }
+    return categories.map(cat => ({
+      id: cat.id_categorie,
+      name: cat.nom_categorie,
+      count: cat.sous_categories.reduce((acc, sc) => acc + sc._count.products, 0)
+    }));
+  }
+
+  // UPDATE
   async update(id: number, data: Partial<CreateProductDto>) {
     return this.prisma.product.update({
       where: { id_produit: id },
@@ -40,7 +88,9 @@ export class ProductService {
     });
   }
 
-  // DELETE : Supprimer
+  
+
+  // DELETE
   async remove(id: number) {
     return this.prisma.product.delete({
       where: { id_produit: id },
