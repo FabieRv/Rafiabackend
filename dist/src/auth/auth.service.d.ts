@@ -20,6 +20,7 @@ export declare class AuthService {
         role: any;
         name: any;
     }>;
+    private hashPassword;
     private isPasswordValid;
     private authenticateUser;
     changePassword(userId: number, oldPassword: string, newPassword: string): Promise<{

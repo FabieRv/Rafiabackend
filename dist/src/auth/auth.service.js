@@ -115,6 +115,10 @@ let AuthService = class AuthService {
             userId: existingUser.id_user,
         });
     }
+    async hashPassword(password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        return hashedPassword;
+    }
     async isPasswordValid(password, hashedPassword) {
         const isPasswordValid = await bcrypt.compare(password, hashedPassword);
         return isPasswordValid;
