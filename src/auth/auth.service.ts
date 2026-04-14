@@ -20,6 +20,7 @@ export class AuthService {
     console.log('JWT SERVICE READY');
   }
 
+  //register
   async register(authRegister: CreateUser) {
     try {
       const { name, email, password, phone, adress, role } = authRegister;
@@ -63,6 +64,7 @@ export class AuthService {
     }
   }
 
+  //login
   async login(authBody: AuthBody) {
     const { email, password } = authBody;
 
@@ -82,6 +84,8 @@ export class AuthService {
     }
     return this.authenticateUser({
       userId: existingUser.id_user,
+      role: existingUser.role,
+      name: existingUser.name,
     });
     // console.log({ secret: process.env.JWT_SECRET });
   }
