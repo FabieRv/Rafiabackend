@@ -28,14 +28,15 @@ export class ProductController {
     return this.productService.getCategoryCounts();
   }
 
-  // 2. AJOUTER (Protégé par JWT)
+  //GET
   @UseGuards(JwtAuthGuard)
   @Post('add')
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productService.create(createProductDto);
+  async create(@Body() createProductDto: CreateProductDto) {
+    console.log("-------------eto ka---------------------")
+    return await this.productService.create(createProductDto);
   }
 
-  // 3. MODIFIER (Protégé par JWT)
+  // MODIFIER (Protégé par JWT)
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async update(

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/user/prisma.service'; // Assure-toi que le chemin est correct
+import { PrismaService } from 'src/user/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 
 @Injectable()
@@ -8,17 +8,22 @@ export class ProductService {
 
   // CREATE
   async create(data: CreateProductDto) {
-    return this.prisma.product.create({
-      data: {
-        nom_produit: data.nom_produit,
-        description: data.description,
-        prix: data.prix,
-        quantite_stock: data.quantite_stock,
-        image: data.image,
-        id_sous_categorie: data.id_sous_categorie,
-        id_catalogue: data.id_catalogue,
-      },
-    });
+    try {
+      return await this.prisma.product.create({
+        data: {
+          nom_produit: data.nom_produit,
+          description: data.description,
+          type: data.type,
+          prix: Number(data.prix),
+          quantite_stock: Number(data.quantite_stock),
+          image: data.image,
+          id_sous_categorie: Number(data.id_sous_categorie),
+        },
+      });
+    } catch (error) {
+      console.error('Erreur Prisma :', error);
+      throw error;
+    }
   }
 
   // READ : Tous les produits
@@ -36,7 +41,11 @@ export class ProductService {
       include: {
         sous_category: {
           include: {
-            category: true,
+            category: {
+              include: {
+                type: true,
+              },
+            },
           },
         },
       },
@@ -65,18 +74,20 @@ export class ProductService {
         sous_categories: {
           include: {
             _count: {
-              select: { products: true }
-            }
-          }
-        }
-      }
+              select: { products: true },
+            },
+          },
+        },
+      },
     });
-  
-    // On transforme la donnée pour avoir un format simple : { id, nom, total }
-    return categories.map(cat => ({
+
+    return categories.map((cat) => ({
       id: cat.id_categorie,
       name: cat.nom_categorie,
-      count: cat.sous_categories.reduce((acc, sc) => acc + sc._count.products, 0)
+      count: cat.sous_categories.reduce(
+        (acc, sc) => acc + sc._count.products,
+        0,
+      ),
     }));
   }
 
@@ -87,8 +98,6 @@ export class ProductService {
       data,
     });
   }
-
-  
 
   // DELETE
   async remove(id: number) {
