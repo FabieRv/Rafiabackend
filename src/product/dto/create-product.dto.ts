@@ -1,4 +1,4 @@
-export class CreateProductDto {
+export class CreateProductDtoRequest {
   nom_produit: string;
   description: string;
   type: string;

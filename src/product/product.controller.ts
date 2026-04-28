@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
-import { CreateProductDto } from './dto/create-product.dto';
+import { CreateProductDtoRequest } from './dto/create-product.dto';
 import { JwtAuthGuard } from 'src/middleware/jwt-auth.guard';
 
 @Controller('products')
@@ -31,9 +31,10 @@ export class ProductController {
   //GET
   @UseGuards(JwtAuthGuard)
   @Post('add')
-  async create(@Body() createProductDto: CreateProductDto) {
-    console.log("-------------eto ka---------------------")
-    return await this.productService.create(createProductDto);
+  async create(@Body() createProductDtoRequest: CreateProductDtoRequest) {
+    console.log('-------------eto ka---------------------');
+    console.log('REQUÊTE REÇUE AVEC SUCCÈS !');
+    return await this.productService.create(createProductDtoRequest);
   }
 
   // MODIFIER (Protégé par JWT)
@@ -41,7 +42,7 @@ export class ProductController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateDto: Partial<CreateProductDto>,
+    @Body() updateDto: Partial<CreateProductDtoRequest>,
   ) {
     await this.productService.update(+id, updateDto);
     return {

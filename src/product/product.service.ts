@@ -1,13 +1,14 @@
+import { SousCategory } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/user/prisma.service';
-import { CreateProductDto } from './dto/create-product.dto';
+import { CreateProductDtoRequest } from './dto/create-product.dto';
 
 @Injectable()
 export class ProductService {
   constructor(private prisma: PrismaService) {}
 
   // CREATE
-  async create(data: CreateProductDto) {
+  async create(data: CreateProductDtoRequest) {
     try {
       return await this.prisma.product.create({
         data: {
@@ -17,7 +18,12 @@ export class ProductService {
           prix: Number(data.prix),
           quantite_stock: Number(data.quantite_stock),
           image: data.image,
-          id_sous_categorie: Number(data.id_sous_categorie),
+          //Number(data.id_sous_categorie)
+          sous_category: {
+            connect: {
+              id_sous_categorie: Number(data.id_sous_categorie),
+            },
+          },
         },
       });
     } catch (error) {
@@ -48,6 +54,9 @@ export class ProductService {
             },
           },
         },
+      },
+      orderBy: {
+        date_ajout: 'desc',
       },
     });
   }
@@ -92,7 +101,7 @@ export class ProductService {
   }
 
   // UPDATE
-  async update(id: number, data: Partial<CreateProductDto>) {
+  async update(id: number, data: Partial<CreateProductDtoRequest>) {
     return this.prisma.product.update({
       where: { id_produit: id },
       data,

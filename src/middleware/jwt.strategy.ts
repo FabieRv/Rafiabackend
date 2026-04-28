@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import { config } from 'dotenv';
+
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 @Injectable()
@@ -14,6 +14,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    return { userId: payload.sub, email: payload.email };
+    // 1. Regardez votre console Backend (terminal) après avoir cliqué sur "Enregistrer"
+    console.log('--- [DEBUG JWT] PAYLOAD DÉCODÉ ---', payload);
+    return {
+      userId: payload.sub || payload.id || null,
+      role: payload.role,
+    };
   }
 }
