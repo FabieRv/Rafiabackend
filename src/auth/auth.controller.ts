@@ -16,6 +16,7 @@ export type CreateUser = {
   adress: string;
   password: string;
   role: string;
+  image: string;
 };
 
 @Controller('auth')

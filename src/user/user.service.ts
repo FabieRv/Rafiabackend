@@ -15,9 +15,25 @@ export class UserService {
         adress: true,
         password: true,
         role: true,
+        image: true,
       },
     });
 
     return users;
+  }
+
+  async updateImage(userId: number, image: string) {
+    if (!userId) {
+      throw new Error('Missing userId');
+    }
+
+    return this.prisma.user.update({
+      where: {
+        id_user: userId,
+      },
+      data: {
+        image,
+      },
+    });
   }
 }

@@ -20,10 +20,12 @@ export class AuthService {
     console.log('JWT SERVICE READY');
   }
 
+  
   //register
   async register(authRegister: CreateUser) {
     try {
-      const { name, email, password, phone, adress, role } = authRegister;
+      const { name, email, password, phone, adress, role, image } =
+        authRegister;
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         throw new BadRequestException('Email invalide');
@@ -43,6 +45,7 @@ export class AuthService {
         if (roleUpper === 'ADMIN') finalRole = Role.ADMIN;
       }
 
+      const imagePath = 'https://ui-avatars.com/api/?name=' + name;
       const newUser = await this.prisma.user.create({
         data: {
           name,
@@ -51,6 +54,7 @@ export class AuthService {
           adress,
           password: hashedPassword,
           role: finalRole,
+          image: imagePath,
         },
       });
       const { password: _, ...userWithoutPassword } = newUser;
@@ -87,7 +91,6 @@ export class AuthService {
       role: existingUser.role,
       name: existingUser.name,
     });
-    // console.log({ secret: process.env.JWT_SECRET });
   }
 
   private async hashPassword(password: string) {
