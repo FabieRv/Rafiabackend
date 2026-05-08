@@ -12,6 +12,7 @@ import {
 import { ProductService } from './product.service';
 import { CreateProductDtoRequest } from './dto/create-product.dto';
 import { JwtAuthGuard } from 'src/middleware/jwt-auth.guard';
+import { Roles } from 'src/middleware/roles.decorator';
 
 @Controller('products')
 export class ProductController {
@@ -32,8 +33,6 @@ export class ProductController {
   @UseGuards(JwtAuthGuard)
   @Post('add')
   async create(@Body() createProductDtoRequest: CreateProductDtoRequest) {
-    console.log('-------------eto ka---------------------');
-    console.log('REQUÊTE REÇUE AVEC SUCCÈS !');
     return await this.productService.create(createProductDtoRequest);
   }
 
@@ -54,6 +53,7 @@ export class ProductController {
 
   // 4. SUPPRIMER (Protégé par JWT)
   @UseGuards(JwtAuthGuard)
+  @Roles('admin')
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.productService.remove(+id);

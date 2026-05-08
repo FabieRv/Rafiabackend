@@ -18,6 +18,14 @@ enum StatutCatalogue {
   EN_ATTENTE
 }
 
+enum CommandeStatus{
+  PENDING           //EN_ATTENTE
+  CONFIRMED         //CONFIRMEE
+  SHIPPED           // EXPEDIEE 
+  DELIVERED         //LIVREE
+  CANCELLED         //ANNULEE
+}
+
 model User {
   id_user    Int         @id @default(autoincrement())
   name       String
@@ -31,6 +39,7 @@ model User {
   updatedAt  DateTime?   @updatedAt
 
   catalogues Catalogue[]
+  commandes  Commande[]
 }
 
 model Type {
@@ -68,7 +77,7 @@ model SousCategory {
 model Catalogue {
   id_catalogue   Int             @id @default(autoincrement())
   nom_pdf  String
-  lien_pdf    String?         @db.Text
+  lien_pdf    String?           @db.Text
   date_creation  DateTime        @default(now())
   statut         StatutCatalogue @default(EN_ATTENTE)
 
@@ -89,4 +98,31 @@ model Product {
 
   id_sous_categorie  Int
   sous_category      SousCategory @relation(fields: [id_sous_categorie], references: [id_sous_categorie])
+  commandeItems      CommandeItem[]
+}
+
+
+
+model Commande{
+  id_commande          Int               @id @default(autoincrement())
+  total                Float 
+  statut               CommandeStatus     @default(PENDING)
+  id_user              Int
+  createdAt            DateTime           @default(now())
+
+  user                 User               @relation(fields: [id_user], references: [id_user])
+  tems                 CommandeItem[]
+} 
+
+
+model CommandeItem{
+  id_commandeItem      Int              @id @default(autoincrement())
+  quantite_stock       Int
+  prix                 Int
+
+  id_commande          Int
+  commande             Commande @relation(fields: [id_commande], references: [id_commande])
+
+  id_produit           Int
+  product     Product  @relation(fields: [id_produit], references: [id_produit])
 }
