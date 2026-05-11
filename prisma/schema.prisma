@@ -19,11 +19,11 @@ enum StatutCatalogue {
 }
 
 enum CommandeStatus{
-  PENDING           //EN_ATTENTE
-  CONFIRMED         //CONFIRMEE
-  SHIPPED           // EXPEDIEE 
-  DELIVERED         //LIVREE
-  CANCELLED         //ANNULEE
+  EN_ATTENTE           //PENDING 
+  CONFIRMEE           //CONFIRMED 
+  EXPEDIEE            // SHIPPED   
+  LIVREE              //DELIVERED 
+  ANNULEE             //CANCELLED
 }
 
 model User {
@@ -106,19 +106,19 @@ model Product {
 model Commande{
   id_commande          Int               @id @default(autoincrement())
   total                Float 
-  statut               CommandeStatus     @default(PENDING)
+  statut               CommandeStatus     @default(EN_ATTENTE)
   id_user              Int
   createdAt            DateTime           @default(now())
 
   user                 User               @relation(fields: [id_user], references: [id_user])
-  tems                 CommandeItem[]
+  items               CommandeItem[]
 } 
 
 
 model CommandeItem{
   id_commandeItem      Int              @id @default(autoincrement())
   quantite_stock       Int
-  prix                 Int
+  prix                 Float
 
   id_commande          Int
   commande             Commande @relation(fields: [id_commande], references: [id_commande])
