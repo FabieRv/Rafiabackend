@@ -15,7 +15,6 @@ enum Role {
 enum StatutCatalogue {
   ACTIF
   INACTIF
-  EN_ATTENTE
 }
 
 enum CommandeStatus{
@@ -38,7 +37,6 @@ model User {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime?   @updatedAt
 
-  catalogues Catalogue[]
   commandes  Commande[]
 }
 
@@ -59,6 +57,7 @@ model Category {
   id_type       Int
   type          Type           @relation(fields: [id_type], references: [id_type])
 
+
   sous_categories SousCategory[]
 }
 
@@ -75,15 +74,10 @@ model SousCategory {
 }
 
 model Catalogue {
-  id_catalogue   Int             @id @default(autoincrement())
-  nom_pdf  String
-  lien_pdf    String?           @db.Text
-  date_creation  DateTime        @default(now())
-  statut         StatutCatalogue @default(EN_ATTENTE)
-
-  id_user        Int
-  user           User            @relation(fields: [id_user], references: [id_user])
-
+  id_catalogue      Int                  @id @default(autoincrement())
+  nom_lien_pdf      String?              @db.Text
+  statut            StatutCatalogue      @default(INACTIF)
+  date_ajout        DateTime             @default(now())
 }
 
 model Product {

@@ -7,6 +7,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { ProductModule } from './product/product.module';
 import { ClientsModule } from './clients/clients.module';
 import { CommandeModule } from './commande/commande.module';
+import { CatalogueModule } from './catalogue/catalogue.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CommandeModule } from './commande/commande.module';
     ProductModule,
     ClientsModule,
     CommandeModule,
+    CatalogueModule,
   ],
   controllers: [],
   providers: [],
