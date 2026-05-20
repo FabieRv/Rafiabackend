@@ -37,7 +37,6 @@ model User {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime?   @updatedAt
 
-  catalogues Catalogue[]
   commandes  Commande[]
 }
 
@@ -58,7 +57,7 @@ model Category {
   id_type       Int
   type          Type           @relation(fields: [id_type], references: [id_type])
 
-  catalogues      Catalogue[]
+
   sous_categories SousCategory[]
 }
 
@@ -79,12 +78,6 @@ model Catalogue {
   nom_lien_pdf      String?              @db.Text
   statut            StatutCatalogue      @default(INACTIF)
   date_ajout        DateTime             @default(now())
-
-
-  id_user           Int
-  user              User                 @relation(fields: [id_user], references: [id_user])
-  id_categorie      Int
- categorie          Category        @relation(fields: [id_categorie], references: [id_categorie])
 }
 
 model Product {
