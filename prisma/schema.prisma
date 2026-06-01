@@ -38,6 +38,7 @@ model User {
   updatedAt  DateTime?   @updatedAt
 
   commandes  Commande[]
+  panier     Panier?
 }
 
 model Type {
@@ -93,12 +94,13 @@ model Product {
   id_sous_categorie  Int
   sous_category      SousCategory @relation(fields: [id_sous_categorie], references: [id_sous_categorie])
   commandeItems      CommandeItem[]
+  panierItems        PanierItem[]
 }
 
 
 
 model Commande{
-  id_commande          Int               @id @default(autoincrement())
+  id_commande          Int                @id @default(autoincrement())
   total                Float 
   statut               CommandeStatus     @default(EN_ATTENTE)
   id_user              Int
@@ -111,12 +113,37 @@ model Commande{
 
 model CommandeItem{
   id_commandeItem      Int              @id @default(autoincrement())
-  quantite_stock       Int
+  quantite             Int?              
   prix                 Float
 
   id_commande          Int
   commande             Commande @relation(fields: [id_commande], references: [id_commande])
 
   id_produit           Int
-  product     Product  @relation(fields: [id_produit], references: [id_produit])
+  product              Product  @relation(fields: [id_produit], references: [id_produit])
 }
+
+
+model Panier{
+  id_panier Int   @id @default(autoincrement ())
+  id_user   Int   @unique
+
+  user      User  @relation(fields: [id_user], references: [id_user])
+
+  items     PanierItem[]
+
+}
+
+model PanierItem{
+  id_panierItem Int @id @default(autoincrement())
+
+  id_panier     Int
+  panier        Panier  @relation(fields: [id_panier], references: [id_panier])
+
+  id_produit    Int
+  product       Product @relation(fields: [id_produit], references: [id_produit])
+
+  quantite      Int
+}
+
+

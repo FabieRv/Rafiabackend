@@ -1,41 +1,30 @@
-import path from 'path';
+import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { CommandeService } from './commande.service';
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Post,
-} from '@nestjs/common';
-import { CommandeStatus } from '@prisma/client';
 
-@Controller('commandes')
+@Controller('cart')
 export class CommandeController {
-  constructor(private readonly CommandeService: CommandeService) {}
+  constructor(private readonly commandeService: CommandeService) {}
 
-  @Post()
-  async create(
-    @Body()
-    data: {
-      userId: number;
-      items: { id_produit: number; quantite: number }[];
-    },
+  @Post('add')
+  addToCart(
+    @Body() body: { userId: number; productId: number; quantity: number },
   ) {
-    return this.CommandeService.createCommande(data.userId, data.items);
+    return this.commandeService.addToCart(
+      body.userId,
+      body.productId,
+      body.quantity,
+    );
   }
 
-  @Get()
-  async findAll() {
-    return this.CommandeService.findAll();
+  @Get(':userId')
+  async getCart(@Param('userId') userId: string) {
+    return this.commandeService.getCart(+userId);
   }
-
-  @Patch(':id/status')
-  async updateStatus(
-    @Param('id', ParseIntPipe) id: number,
-    @Body('status') status: CommandeStatus,
-  ) {
-    return this.CommandeService.updateStatus(id, status);
+  
+  @Post('validate')
+  async validate(@Body() body: { userId: number }) {
+    // C'est ici que le "Loading" du frontend sera déclenché
+    const result = await this.commandeService.validateOrder(body.userId);
+    return { message: 'Commande réussie', data: result };
   }
 }

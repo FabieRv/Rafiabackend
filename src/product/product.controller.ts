@@ -8,6 +8,7 @@ import {
   UseGuards,
   Patch,
   Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDtoRequest } from './dto/create-product.dto';
@@ -27,6 +28,13 @@ export class ProductController {
   @Get('get-category-count')
   async countAllProductByCategory() {
     return this.productService.getCategoryCounts();
+  }
+
+  //get un seul produit
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    console.log("--------ID----------"+id)
+    return this.productService.findOne(id);
   }
 
   //GET

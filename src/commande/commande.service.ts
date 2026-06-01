@@ -1,105 +1,96 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/user/prisma.service';
-import { CommandeStatus } from '@prisma/client';
-import { ItemInput } from 'src/types/ItemInput';
-
 @Injectable()
 export class CommandeService {
   constructor(private prisma: PrismaService) {}
 
-  // 1. CRÉER UNE COMMANDE
-  async createCommande(
-    userId: number,
-    items: { id_produit: number; quantite: number }[],
-  ) {
-    return await this.prisma.$transaction(async (tx) => {
-      let totalCommande = 0;
-      const itemsToCreate: ItemInput[] = [];
+  //create
+  async addToCart(userId: number, productId: number, quantity: number) {
+    let panier = await this.prisma.panier.findUnique({
+      where: { id_user: userId },
+    });
 
-      for (const item of items) {
-        const produit = await tx.product.findUnique({
-          where: { id_produit: item.id_produit },
-        });
-
-        if (!produit)
-          throw new NotFoundException(`Produit ${item.id_produit} introuvable`);
-        if (produit.quantite_stock < item.quantite)
-          throw new BadRequestException(
-            `Stock insuffisant pour ${produit.nom_produit}`,
-          );
-
-        const prixApplique = Math.round(Number(produit.prix));
-        totalCommande += prixApplique * item.quantite;
-
-        itemsToCreate.push({
-          id_produit: item.id_produit,
-          quantite_stock: item.quantite,
-          prix: Number(produit.prix),
-        });
-
-        // Mise à jour du stock
-        await tx.product.update({
-          where: { id_produit: item.id_produit },
-          data: { quantite_stock: { decrement: item.quantite } },
-        });
-      }
-
-      // Ajouter la création de la commande ici
-      return await tx.commande.create({
-        data: {
-          id_user: userId,
-          total: totalCommande,
-          statut: 'EN_ATTENTE',
-          items: {
-            create: itemsToCreate,
-          },
-        },
-        include: { items: true },
+    if (!panier) {
+      panier = await this.prisma.panier.create({
+        data: { id_user: userId },
       });
+    }
+
+    //si produit deja dans le panier
+    const existingItem = await this.prisma.panierItem.findFirst({
+      where: {
+        id_panier: panier.id_panier,
+        id_produit: productId,
+      },
+    });
+
+    if (existingItem) {
+      return this.prisma.panierItem.update({
+        where: { id_panierItem: existingItem.id_panierItem },
+        data: {
+          quantite: existingItem.quantite + quantity,
+        },
+      });
+    }
+
+    return this.prisma.panierItem.create({
+      data: {
+        id_panier: panier.id_panier,
+        id_produit: productId,
+        quantite: quantity,
+      },
     });
   }
 
-  // 2. RÉCUPÉRER TOUTES LES COMMANDES (Admin)
-  async findAll() {
-    return this.prisma.commande.findMany({
+  // (pour l'affichage et l'icône)
+  async getCart(userId: number) {
+    return this.prisma.panier.findUnique({
+      where: { id_user: userId },
       include: {
-        user: {
-          select: { name: true, email: true },
-        },
         items: {
           include: { product: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
     });
   }
 
-  // 3. METTRE À JOUR LE STATUT (Admin)
-  async updateStatus(id_commande: number, nouveauStatut: CommandeStatus) {
-    const commandeExistante = await this.prisma.commande.findUnique({
-      where: { id_commande },
-    });
+  //valider le panier et tranformer en commande
+  async validateOrder(userId: number) {
+    const panier = await this.getCart(userId);
 
-    if (!commandeExistante) {
-      throw new NotFoundException(`Commande #${id_commande} non trouvée.`);
+    if (!panier || panier.items.length === 0) {
+      throw new NotFoundException('Le panier est vide');
     }
 
-    return this.prisma.commande.update({
-      where: { id_commande },
-      data: { statut: nouveauStatut },
-    });
-  }
+    // Calculer le total
+    const total = panier.items.reduce((acc, item) => {
+      return acc + Number(item.product.prix) * item.quantite;
+    }, 0);
 
-  // 4. RÉCUPÉRER LES COMMANDES D'UN UTILISATEUR
-  async findByUserId(userId: number) {
-    return this.prisma.commande.findMany({
-      where: { id_user: userId },
-      include: { items: true },
-      orderBy: { createdAt: 'desc' },
+    // Utiliser une transaction Prisma pour créer la commande et vider le panier
+    return this.prisma.$transaction(async (tx) => {
+      // Créer la commande
+      const commande = await tx.commande.create({
+        data: {
+          id_user: userId,
+          total: total,
+          statut: 'EN_ATTENTE',
+          items: {
+            create: panier.items.map((item) => ({
+              id_produit: item.id_produit,
+              quantite: item.quantite,
+              prix: Number(item.product.prix),
+            })),
+          },
+        },
+      });
+
+      // Vider le panier
+      await tx.panierItem.deleteMany({
+        where: { id_panier: panier.id_panier },
+      });
+
+      return commande;
     });
   }
 }

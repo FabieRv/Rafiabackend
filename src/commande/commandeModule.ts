@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from 'src/user/prisma.service';
-import { CommandeController } from './CommandeController';
 import { CommandeService } from './commande.service';
+
+import { PrismaService } from 'src/user/prisma.service';
+import { CommandeController } from './commandeController';
 
 @Module({
   controllers: [CommandeController],
