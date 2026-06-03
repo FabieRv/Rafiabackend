@@ -23,7 +23,6 @@ export class CommandeController {
   
   @Post('validate')
   async validate(@Body() body: { userId: number }) {
-    // C'est ici que le "Loading" du frontend sera déclenché
     const result = await this.commandeService.validateOrder(body.userId);
     return { message: 'Commande réussie', data: result };
   }
