@@ -20,7 +20,6 @@ export class AuthService {
     console.log('JWT SERVICE READY');
   }
 
-  
   //register
   async register(authRegister: CreateUser) {
     try {
@@ -90,6 +89,7 @@ export class AuthService {
       userId: existingUser.id_user,
       role: existingUser.role,
       name: existingUser.name,
+      email: existingUser.email,
     });
   }
 
@@ -105,10 +105,13 @@ export class AuthService {
 
   private async authenticateUser(user: any) {
     const payload = {
-      sub: user.id_user,
+      userId: user.userId,
       role: user.role,
+      email: user.email,
     };
-
+    console.log('payload------------------', payload);
+    console.log('payload =', JSON.stringify(payload, null, 2));
+    console.log('user------------------', JSON.stringify(user, null, 2));
     return {
       access_token: await this.jwtService.sign(payload),
       role: user.role,

@@ -8,7 +8,7 @@ import { ProductModule } from './product/product.module';
 import { ClientsModule } from './clients/clients.module';
 
 import { CatalogueModule } from './catalogue/catalogue.module';
-import { CommandeModule } from './commande/commandeModule';
+import { CommandeModule } from './commande/commande.module';
 
 @Module({
   imports: [

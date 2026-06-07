@@ -14,12 +14,13 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
-  const port = process.env.PORT || 3001;
-  await app.listen(port);
-  console.log(`Server running on http://localhost:${port}`);
-
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
+
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
+  console.log(`Server running on http://localhost:${port}`);
+  console.log(`🚀 Server running on http://localhost:${port}`);
 }
 bootstrap();

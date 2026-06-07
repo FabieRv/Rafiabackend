@@ -20,9 +20,16 @@ enum StatutCatalogue {
 enum CommandeStatus{
   EN_ATTENTE           //PENDING 
   CONFIRMEE           //CONFIRMED 
-  EXPEDIEE            // SHIPPED   
+  NEGOCIEE            // NEGOCED   
   LIVREE              //DELIVERED 
   ANNULEE             //CANCELLED
+}
+ 
+enum StatutLivraison {
+  EN_PREPARATION
+  EN_COURS
+  LIVREE
+  ANNULEE
 }
 
 model User {
@@ -38,7 +45,6 @@ model User {
   updatedAt  DateTime?   @updatedAt
 
   commandes  Commande[]
-  panier     Panier?
 }
 
 model Type {
@@ -101,13 +107,21 @@ model Product {
 
 model Commande{
   id_commande          Int                @id @default(autoincrement())
+  id_user              Int
+
   total                Float 
   statut               CommandeStatus     @default(EN_ATTENTE)
-  id_user              Int
-  createdAt            DateTime           @default(now())
 
-  user                 User               @relation(fields: [id_user], references: [id_user])
-  items               CommandeItem[]
+  adresse_livraison    String
+  ville                String
+  region               String
+
+  statut_livraison      StatutLivraison    @default(EN_PREPARATION)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  user                 User                @relation(fields: [id_user], references: [id_user])
+  items                CommandeItem[]
 } 
 
 
@@ -122,6 +136,7 @@ model CommandeItem{
   id_produit           Int
   product              Product  @relation(fields: [id_produit], references: [id_produit])
 }
+
 
 
 model Panier{

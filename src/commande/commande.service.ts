@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/user/prisma.service';
+import { CommandeStatus, StatutLivraison } from '@prisma/client';
+
 @Injectable()
 export class CommandeService {
   constructor(private prisma: PrismaService) {}
 
-  //create
+  //ajout au panier
   async addToCart(userId: number, productId: number, quantity: number) {
     let panier = await this.prisma.panier.findUnique({
       where: { id_user: userId },
@@ -16,7 +18,6 @@ export class CommandeService {
       });
     }
 
-    //si produit deja dans le panier
     const existingItem = await this.prisma.panierItem.findFirst({
       where: {
         id_panier: panier.id_panier,
@@ -42,55 +43,54 @@ export class CommandeService {
     });
   }
 
-  // (pour l'affichage et l'icône)
+  //get panier
   async getCart(userId: number) {
     return this.prisma.panier.findUnique({
       where: { id_user: userId },
       include: {
         items: {
-          include: { product: true },
+          include: {
+            product: true,
+          },
         },
       },
     });
   }
 
-  //valider le panier et tranformer en commande
-  async validateOrder(userId: number) {
-    const panier = await this.getCart(userId);
+  //valider commande
+  async validateOrder(userId: number, data: any) {
+    const { items, adresse_livraison, ville, region } = data;
 
-    if (!panier || panier.items.length === 0) {
-      throw new NotFoundException('Le panier est vide');
-    }
+    const totalTTC = items.reduce(
+      (acc, item) => acc + item.prix * item.quantite * 1.2,
+      0,
+    );
 
-    // Calculer le total
-    const total = panier.items.reduce((acc, item) => {
-      return acc + Number(item.product.prix) * item.quantite;
-    }, 0);
-
-    // Utiliser une transaction Prisma pour créer la commande et vider le panier
     return this.prisma.$transaction(async (tx) => {
-      // Créer la commande
-      const commande = await tx.commande.create({
+      const nouvelleCommande = await tx.commande.create({
         data: {
-          id_user: userId,
-          total: total,
+          adresse_livraison,
+          ville,
+          region,
+          total: totalTTC,
           statut: 'EN_ATTENTE',
+
+          user: {
+            connect: {
+              id_user: userId,
+            },
+          },
+
           items: {
-            create: panier.items.map((item) => ({
+            create: items.map((item) => ({
               id_produit: item.id_produit,
               quantite: item.quantite,
-              prix: Number(item.product.prix),
+              prix: item.prix,
             })),
           },
         },
       });
-
-      // Vider le panier
-      await tx.panierItem.deleteMany({
-        where: { id_panier: panier.id_panier },
-      });
-
-      return commande;
+      return nouvelleCommande;
     });
   }
 }

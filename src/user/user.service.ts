@@ -36,4 +36,9 @@ export class UserService {
       },
     });
   }
+  async findById(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id_user:id },
+    });
+  }
 }

@@ -1,3 +1,4 @@
+import { CommandeService } from './../commande/commande.service';
 import {
   Controller,
   Get,
@@ -48,9 +49,12 @@ export class UserController {
     }),
   )
   async uploadImage(@UploadedFile() file: Express.Multer.File, @Req() req) {
-    console.log('USER:', req.user);
-    console.log('FILE:', file);
-
     return { ok: true };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  getMe(@Req() req) {
+    return this.UserService.findById(req.user.id);
   }
 }
