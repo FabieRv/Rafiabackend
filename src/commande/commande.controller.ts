@@ -16,10 +16,7 @@ export class CommandeController {
 
   @Post('validate')
   @UseGuards(JwtAuthGuard)
-  async confirmOrder (@Req() req, @Body() body) {
-    console.log(req.user);
-    console.log('USER =-----------------user', req.user);
-    console.log('BODY =-----------------body', body);
+  async confirmOrder(@Req() req, @Body() body) {
     const userId = req.user?.userId;
 
     return this.commandeService.validateOrder(userId, body);
@@ -27,7 +24,6 @@ export class CommandeController {
 
   @Get(':userId')
   async getCart(@Param('userId') userId: string) {
-    console.log('ok------------------------------------------ok');
     return this.commandeService.getCart(+userId);
   }
 }

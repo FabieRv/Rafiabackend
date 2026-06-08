@@ -77,6 +77,7 @@ export class ProductService {
     });
   }
 
+  //get liste les category
   async getCategoryCounts() {
     const categories = await this.prisma.category.findMany({
       include: {
@@ -98,6 +99,10 @@ export class ProductService {
         0,
       ),
     }));
+  }
+
+  async countProducts(): Promise<number> {
+    return this.prisma.product.count();
   }
 
   // UPDATE

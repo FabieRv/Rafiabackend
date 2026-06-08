@@ -109,9 +109,7 @@ export class AuthService {
       role: user.role,
       email: user.email,
     };
-    console.log('payload------------------', payload);
-    console.log('payload =', JSON.stringify(payload, null, 2));
-    console.log('user------------------', JSON.stringify(user, null, 2));
+
     return {
       access_token: await this.jwtService.sign(payload),
       role: user.role,

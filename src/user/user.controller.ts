@@ -1,4 +1,3 @@
-import { CommandeService } from './../commande/commande.service';
 import {
   Controller,
   Get,
@@ -16,25 +15,34 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 @Controller('users')
 export class UserController {
-  constructor(private readonly UserService: UserService) {}
+  constructor(private readonly userService: UserService) {}
 
   @Get()
   getUsers() {
-    return this.UserService.getUsers();
+    return this.userService.getUsers();
   }
+  //count user
 
+  @Get('count')
+  async countUsers() {
+    const count = await this.userService.countUsers();
+    return { count };
+  }
+  //prend un user
   @UseGuards(JwtAuthGuard)
   @Get(':userId')
   getUser(@Param('userId') userId: string) {
-    return this.UserService.getUsers();
+    return this.userService.getUsers();
   }
 
+  //gerer profil
   @UseGuards(JwtAuthGuard)
   @Get('/profile')
   getProfile() {
     return 'test ok';
   }
 
+  //gerer avatar image
   @UseGuards(JwtAuthGuard)
   @Post('uploadimage')
   @UseInterceptors(
@@ -50,11 +58,5 @@ export class UserController {
   )
   async uploadImage(@UploadedFile() file: Express.Multer.File, @Req() req) {
     return { ok: true };
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('me')
-  getMe(@Req() req) {
-    return this.UserService.findById(req.user.id);
   }
 }
