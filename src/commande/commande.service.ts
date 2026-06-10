@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/user/prisma.service';
 import { CommandeStatus, StatutLivraison } from '@prisma/client';
+import { UpdateStatusDto } from './dto/update.status.dto';
 
 @Injectable()
 export class CommandeService {
@@ -91,6 +96,88 @@ export class CommandeService {
         },
       });
       return nouvelleCommande;
+    });
+  }
+
+  async findAllForAdmin(status?: string) {
+    console.log('====================================');
+    console.log('1. ENTRÉE DANS FIND_ALL_FOR_ADMIN');
+    console.log('Query "status" reçue :', status, `(${typeof status})`);
+    console.log('====================================');
+
+    const queryFilter: any = {};
+
+    if (status && status !== 'TOUS') {
+      console.log('2. UN FILTRE EST APPLIQUÉ :', status);
+      // On vérifie si le statut fait partie de l'enum CommandeStatus
+      if (!Object.values(CommandeStatus).includes(status as CommandeStatus)) {
+        console.log('❌ STATUT INVALIDE DÉTECTÉ :', status);
+        throw new BadRequestException(
+          `Le statut '${status}' n'est pas valide.`,
+        );
+      }
+      queryFilter.statut = status as CommandeStatus;
+    } else {
+      console.log('2. AUCUN FILTRE (AFFICHAGE DE TOUTES LES COMMANDES)');
+    }
+
+    try {
+      console.log('3. REQUÊTE PRISMA... FILTRE APPLES :', queryFilter);
+
+      const commandes = await this.prisma.commande.findMany({
+        where: queryFilter,
+        include: {
+          user: {
+            select: {
+              id_user: true,
+              name: true,
+              email: true,
+            },
+          },
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      console.log(
+        '✅ REQUÊTE PRISMA RÉUSSIE ! Nombre de commandes trouvées :',
+        commandes.length,
+      );
+      return commandes;
+    } catch (error) {
+      console.log('❌ CRASH DANS FIND_ALL_FOR_ADMIN !');
+      console.error("DÉTAIL DE L'ERREUR PRISMA :", error);
+      throw error;
+    }
+  }
+
+  async updateStatus(id: number, updateStatusDto: UpdateStatusDto) {
+    const existingCommande = await this.prisma.commande.findUnique({
+      where: { id_commande: id },
+    });
+
+    if (!existingCommande) {
+      throw new NotFoundException(
+        `Impossible de modifier : La commande avec l'ID ${id} n'existe pas.`,
+      );
+    }
+
+    // Étape B : Mettre à jour la commande
+    return this.prisma.commande.update({
+      where: { id_commande: id },
+      data: {
+        statut: updateStatusDto.status,
+      },
+      include: {
+        user: true,
+        items: true,
+      },
     });
   }
 }

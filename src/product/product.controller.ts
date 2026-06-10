@@ -19,23 +19,27 @@ import { Roles } from 'src/middleware/roles.decorator';
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
+  //get liste des produits
   @Get('public-models')
   async getPublicModels(@Query('categoryId') categoryId?: string) {
     const id = categoryId ? parseInt(categoryId, 10) : undefined;
     return this.productService.findAll(id);
   }
 
+  //get par category
   @Get('get-category-count')
   async countAllProductByCategory() {
     return this.productService.getCategoryCounts();
   }
 
-  //get un seul produit
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    console.log("--------ID----------"+id)
-    return this.productService.findOne(id);
+  //cout product
+  @Get('count')
+  async countProducts() {
+    return {
+      count: await this.productService.countProducts(),
+    };
   }
+
 
   //GET
   @UseGuards(JwtAuthGuard)
@@ -70,5 +74,10 @@ export class ProductController {
       message: 'Produit supprimé avec succès',
       statusCode: 200,
     };
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.productService.findOne(id);
   }
 }
