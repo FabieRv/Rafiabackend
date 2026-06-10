@@ -45,6 +45,7 @@ model User {
   updatedAt  DateTime?   @updatedAt
 
   commandes  Commande[]
+  panier     Panier? 
 }
 
 model Type {
