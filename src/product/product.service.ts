@@ -1,4 +1,3 @@
-import { SousCategory } from '@prisma/client';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/user/prisma.service';
 import { CreateProductDtoRequest } from './dto/create-product.dto';
@@ -36,6 +35,7 @@ export class ProductService {
   async findAll(categoryId?: number) {
     return this.prisma.product.findMany({
       where: {
+        is_active: true,
         ...(categoryId
           ? {
               sous_category: {
@@ -102,7 +102,11 @@ export class ProductService {
   }
 
   async countProducts(): Promise<number> {
-    return this.prisma.product.count();
+    return this.prisma.product.count({
+      where: {
+        is_active: true,
+      },
+    });
   }
 
   // UPDATE
@@ -115,8 +119,11 @@ export class ProductService {
 
   // DELETE
   async remove(id: number) {
-    return this.prisma.product.delete({
+    return this.prisma.product.update({
       where: { id_produit: id },
+      data: {
+        is_active: false,
+      },
     });
   }
 }

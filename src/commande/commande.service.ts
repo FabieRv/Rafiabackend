@@ -4,14 +4,16 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/user/prisma.service';
-import { CommandeStatus, StatutLivraison } from '@prisma/client';
+import { CommandeStatus } from '@prisma/client';
 import { UpdateStatusDto } from './dto/update.status.dto';
 
 @Injectable()
 export class CommandeService {
   constructor(private prisma: PrismaService) {}
 
-  //ajout au panier
+  // =========================
+  // AJOUT AU PANIER
+  // =========================
   async addToCart(userId: number, productId: number, quantity: number) {
     let panier = await this.prisma.panier.findUnique({
       where: { id_user: userId },
@@ -48,7 +50,6 @@ export class CommandeService {
     });
   }
 
-  //get panier
   async getCart(userId: number) {
     return this.prisma.panier.findUnique({
       where: { id_user: userId },
@@ -62,17 +63,20 @@ export class CommandeService {
     });
   }
 
-  //valider commande
   async validateOrder(userId: number, data: any) {
     const { items, adresse_livraison, ville, region } = data;
 
-    const totalTTC = items.reduce(
-      (acc, item) => acc + item.prix * item.quantite * 1.2,
+    const TVA_RATE = 0.2;
+
+    const totalHT = items.reduce(
+      (acc, item) => acc + item.prix * item.quantite,
       0,
     );
 
+    const totalTTC = totalHT + totalHT * TVA_RATE;
+
     return this.prisma.$transaction(async (tx) => {
-      const nouvelleCommande = await tx.commande.create({
+      return tx.commande.create({
         data: {
           adresse_livraison,
           ville,
@@ -81,9 +85,7 @@ export class CommandeService {
           statut: 'EN_ATTENTE',
 
           user: {
-            connect: {
-              id_user: userId,
-            },
+            connect: { id_user: userId },
           },
 
           items: {
@@ -91,52 +93,82 @@ export class CommandeService {
               id_produit: item.id_produit,
               quantite: item.quantite,
               prix: item.prix,
+
+              product_name_snapshot: item.product_name ?? null,
+              product_price_snapshot: item.prix,
             })),
           },
         },
       });
-      return nouvelleCommande;
     });
   }
 
-  async findAllForAdmin(status?: string) {
-    console.log('====================================');
-    console.log('1. ENTRÉE DANS FIND_ALL_FOR_ADMIN');
-    console.log('Query "status" reçue :', status, `(${typeof status})`);
-    console.log('====================================');
+  async findOneForAdmin(id: number) {
+    const commande = await this.prisma.commande.findUnique({
+      where: { id_commande: id },
 
+      include: {
+        user: true,
+
+        items: {
+          include: {
+            product: {
+              include: {
+                sous_category: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!commande) {
+      throw new NotFoundException(`Commande introuvable`);
+    }
+
+    return {
+      ...commande,
+
+      items: (commande.items || []).map((item) => ({
+        ...item,
+
+        product: item.product
+          ? item.product
+          : {
+              id_produit: item.id_produit,
+              nom_produit: 'Produit supprimé',
+              prix: 0,
+              image: null,
+              sous_category: null,
+            },
+      })),
+    };
+  }
+
+  async findAllForAdmin(status?: string) {
     const queryFilter: any = {};
 
     if (status && status !== 'TOUS') {
-      console.log('2. UN FILTRE EST APPLIQUÉ :', status);
-      // On vérifie si le statut fait partie de l'enum CommandeStatus
       if (!Object.values(CommandeStatus).includes(status as CommandeStatus)) {
-        console.log('❌ STATUT INVALIDE DÉTECTÉ :', status);
-        throw new BadRequestException(
-          `Le statut '${status}' n'est pas valide.`,
-        );
+        throw new BadRequestException(`Statut invalide`);
       }
-      queryFilter.statut = status as CommandeStatus;
-    } else {
-      console.log('2. AUCUN FILTRE (AFFICHAGE DE TOUTES LES COMMANDES)');
+      queryFilter.statut = status;
     }
 
     try {
-      console.log('3. REQUÊTE PRISMA... FILTRE APPLES :', queryFilter);
+      console.log('🔥 FIND ALL ADMIN START');
 
       const commandes = await this.prisma.commande.findMany({
         where: queryFilter,
         include: {
-          user: {
-            select: {
-              id_user: true,
-              name: true,
-              email: true,
-            },
-          },
+          user: true,
           items: {
             include: {
-              product: true,
+              product: {
+                include: {
+                  sous_category: true,
+                },
+              },
             },
           },
         },
@@ -145,14 +177,34 @@ export class CommandeService {
         },
       });
 
-      console.log(
-        '✅ REQUÊTE PRISMA RÉUSSIE ! Nombre de commandes trouvées :',
-        commandes.length,
-      );
-      return commandes;
+      console.log('🔥 COMMANDES FOUND =', commandes?.length);
+
+      return (commandes || []).map((cmd) => ({
+        ...cmd,
+        items: (cmd.items || []).map((item) => ({
+          ...item,
+          product: item.product
+            ? {
+                id_produit: item.product.id_produit,
+                nom_produit: item.product.nom_produit,
+                prix: Number(item.product.prix), // Sécurité : MySQL Decimal renvoie parfois un string ou un objet Decimal
+                image: item.product.image,
+                type: item.product.type,
+                sous_category: item.product.sous_category ?? null,
+              }
+            : {
+                id_produit: item.id_produit ?? 0, // Utilise 0 ou null si id_produit physique n'existe plus en BDD
+                nom_produit: item.product_name_snapshot ?? 'Produit supprimé', // Utilise le snapshot s'il existe !
+                prix: item.product_price_snapshot ?? 0, // Utilise le prix figé au moment de la commande
+                image: null,
+                type: null,
+                sous_category: null,
+              },
+        })),
+      }));
     } catch (error) {
-      console.log('❌ CRASH DANS FIND_ALL_FOR_ADMIN !');
-      console.error("DÉTAIL DE L'ERREUR PRISMA :", error);
+      console.log('❌ ERROR findAllForAdmin');
+      console.error(error);
       throw error;
     }
   }
@@ -163,12 +215,9 @@ export class CommandeService {
     });
 
     if (!existingCommande) {
-      throw new NotFoundException(
-        `Impossible de modifier : La commande avec l'ID ${id} n'existe pas.`,
-      );
+      throw new NotFoundException(`Commande ${id} introuvable`);
     }
 
-    // Étape B : Mettre à jour la commande
     return this.prisma.commande.update({
       where: { id_commande: id },
       data: {
@@ -178,6 +227,20 @@ export class CommandeService {
         user: true,
         items: true,
       },
+    });
+  }
+
+  async countCommandes() {
+    return this.prisma.commande.count();
+  }
+
+  async remove(id: number) {
+    await this.prisma.commandeItem.deleteMany({
+      where: { id_commande: id },
+    });
+
+    return this.prisma.commande.delete({
+      where: { id_commande: id },
     });
   }
 }

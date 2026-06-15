@@ -98,8 +98,10 @@ model Product {
   date_ajout         DateTime     @default(now())
   type               String?
 
+   is_active         Boolean       @default(true)
+
   id_sous_categorie  Int
-  sous_category      SousCategory @relation(fields: [id_sous_categorie], references: [id_sous_categorie])
+  sous_category      SousCategory   @relation(fields: [id_sous_categorie], references: [id_sous_categorie])
   commandeItems      CommandeItem[]
   panierItems        PanierItem[]
 }
@@ -127,15 +129,19 @@ model Commande{
 
 
 model CommandeItem{
-  id_commandeItem      Int              @id @default(autoincrement())
-  quantite             Int?              
-  prix                 Float
+  id_commandeItem         Int              @id @default(autoincrement())
+  quantite                Int?              
+  prix                    Float
 
-  id_commande          Int
-  commande             Commande @relation(fields: [id_commande], references: [id_commande])
+  product_name_snapshot   String?
+  product_price_snapshot  Float?
 
-  id_produit           Int
-  product              Product  @relation(fields: [id_produit], references: [id_produit])
+  id_commande             Int
+  commande                Commande @relation(fields: [id_commande], references: [id_commande])
+
+  id_produit             Int?
+  product                Product? @relation(fields: [id_produit], references: [id_produit], onDelete: SetNull)
+
 }
 
 
