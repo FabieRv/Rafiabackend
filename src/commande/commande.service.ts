@@ -11,9 +11,7 @@ import { UpdateStatusDto } from './dto/update.status.dto';
 export class CommandeService {
   constructor(private prisma: PrismaService) {}
 
-  // =========================
   // AJOUT AU PANIER
-  // =========================
   async addToCart(userId: number, productId: number, quantity: number) {
     let panier = await this.prisma.panier.findUnique({
       where: { id_user: userId },
@@ -187,15 +185,15 @@ export class CommandeService {
             ? {
                 id_produit: item.product.id_produit,
                 nom_produit: item.product.nom_produit,
-                prix: Number(item.product.prix), // Sécurité : MySQL Decimal renvoie parfois un string ou un objet Decimal
+                prix: Number(item.product.prix),
                 image: item.product.image,
                 type: item.product.type,
                 sous_category: item.product.sous_category ?? null,
               }
             : {
-                id_produit: item.id_produit ?? 0, // Utilise 0 ou null si id_produit physique n'existe plus en BDD
-                nom_produit: item.product_name_snapshot ?? 'Produit supprimé', // Utilise le snapshot s'il existe !
-                prix: item.product_price_snapshot ?? 0, // Utilise le prix figé au moment de la commande
+                id_produit: item.id_produit ?? 0,
+                nom_produit: item.product_name_snapshot ?? 'Produit supprimé',
+                prix: item.product_price_snapshot ?? 0,
                 image: null,
                 type: null,
                 sous_category: null,
