@@ -6,4 +6,5 @@ export class CreateProductDtoRequest {
   quantite_stock: number;
   image: string;
   id_sous_categorie: number;
+  isEdit?: boolean;
 }

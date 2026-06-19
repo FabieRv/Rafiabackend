@@ -28,10 +28,11 @@ export class ProductService {
           },
         },
       });
-
+      const STATUS = data.isEdit ? 'PRODUCT_UPDATED' : 'PRODUCT_CREATED';
+      const VALUE_MODIF = data.isEdit ? 'modifié' : 'créé';
       await this.activityLogService.createLog(
-        'PRODUCT_CREATED',
-        `${product.nom_produit} créé`,
+        STATUS,
+        `${product.nom_produit} ${VALUE_MODIF}`,
         'product',
         product.id_produit,
         userId,
