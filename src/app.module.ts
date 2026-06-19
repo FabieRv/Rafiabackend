@@ -10,6 +10,7 @@ import { ClientsModule } from './clients/clients.module';
 import { CatalogueModule } from './catalogue/catalogue.module';
 import { CommandeModule } from './commande/commande.module';
 import { ActivityLogModule } from './activity/activity-log.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ActivityLogModule } from './activity/activity-log.module';
     ClientsModule,
     CommandeModule,
     CatalogueModule,
+    ChatModule,
     ActivityLogModule,
   ],
   controllers: [],

@@ -3,9 +3,10 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { PrismaService } from '../user/prisma.service'; //chemin prisma
+
 import { JwtStrategy } from '../middleware/jwt.strategy';
 import { ActivityLogModule } from 'src/activity/activity-log.module';
+import { PrismaService } from 'src/prisma.service';
 
 @Module({
   imports: [

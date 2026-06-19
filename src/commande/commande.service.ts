@@ -3,10 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/user/prisma.service';
 import { CommandeStatus } from '@prisma/client';
 import { UpdateStatusDto } from './dto/update.status.dto';
 import { ActivityLogService } from 'src/activity/activity-log.service';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class CommandeService {
