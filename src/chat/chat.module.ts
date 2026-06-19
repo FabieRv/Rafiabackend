@@ -6,7 +6,7 @@ import { ChatGateway } from './chat.getwaay';
 import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [PrismaModule, AuthModule],
   providers: [ChatGateway, ChatService],
   controllers: [ChatController],
 })

@@ -6,11 +6,12 @@ import {
 } from '@nestjs/common';
 
 import { AuthBody, CreateUser } from './auth.controller';
-import { PrismaService } from 'src/user/prisma.service';
+
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Role, User } from '@prisma/client';
 import { ActivityLogService } from 'src/activity/activity-log.service';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class AuthService {

@@ -44,8 +44,10 @@ model User {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime?   @updatedAt
 
-  commandes  Commande[]
-  panier     Panier? 
+  conversation    Conversation[]    @relation("ConversationUsers")
+  messages        Message[]
+  commandes       Commande[]
+  panier          Panier? 
 }
 
 model Type {
@@ -144,8 +146,6 @@ model CommandeItem{
 
 }
 
-
-
 model Panier{
   id_panier Int   @id @default(autoincrement ())
   id_user   Int   @unique
@@ -180,5 +180,23 @@ model ActivityLog {
 }
 
 
+model Conversation {
+  id            String         @id @default(uuid())
+  users         User[]         @relation("ConversationUsers")
+  messages      Message[]
+  createdAt     DateTime       @default(now())
+}
 
+
+model Message {
+  id             String        @id @default(uuid())
+  content        String
+  senderId       Int
+  conversationId String
+
+  sender         User          @relation(fields: [senderId], references: [id_user])
+  conversation   Conversation  @relation(fields: [conversationId], references: [id])
+
+  createdAt      DateTime      @default(now())
+}
 
