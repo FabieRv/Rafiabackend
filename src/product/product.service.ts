@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/user/prisma.service';
 import { CreateProductDtoRequest } from './dto/create-product.dto';
+import { ActivityLogService } from 'src/activity/activity-log.service';
 
 @Injectable()
 export class ProductService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private activityLogService: ActivityLogService,
+  ) {}
 
   // CREATE
-  async create(data: CreateProductDtoRequest) {
+  async create(data: CreateProductDtoRequest, userId: number) {
     try {
-      return await this.prisma.product.create({
+      const product = await this.prisma.product.create({
         data: {
           nom_produit: data.nom_produit,
           description: data.description,
@@ -17,7 +21,6 @@ export class ProductService {
           prix: Number(data.prix),
           quantite_stock: Number(data.quantite_stock),
           image: data.image,
-          //Number(data.id_sous_categorie)
           sous_category: {
             connect: {
               id_sous_categorie: Number(data.id_sous_categorie),
@@ -25,6 +28,16 @@ export class ProductService {
           },
         },
       });
+
+      await this.activityLogService.createLog(
+        'PRODUCT_CREATED',
+        `${product.nom_produit} créé`,
+        'product',
+        product.id_produit,
+        userId,
+      );
+
+      return product;
     } catch (error) {
       console.error('Erreur Prisma :', error);
       throw error;
@@ -110,20 +123,46 @@ export class ProductService {
   }
 
   // UPDATE
-  async update(id: number, data: Partial<CreateProductDtoRequest>) {
-    return this.prisma.product.update({
-      where: { id_produit: id },
-      data,
-    });
+  async update(
+    id: number,
+    data: Partial<CreateProductDtoRequest>,
+    userId: number,
+  ) {
+    try {
+      const cleanUserId = Number(userId);
+      const product = await this.prisma.product.update({
+        where: { id_produit: id },
+        data,
+      });
+
+      const log = await this.activityLogService.createLog(
+        'PRODUCT_UPDATED',
+        `${product.nom_produit} modifié`,
+        'product',
+        product.id_produit,
+        cleanUserId,
+      );
+
+      return product;
+    } catch (error) {
+      throw error;
+    }
   }
 
   // DELETE
-  async remove(id: number) {
-    return this.prisma.product.update({
+  async remove(id: number, userId: number) {
+    const product = await this.prisma.product.update({
       where: { id_produit: id },
       data: {
         is_active: false,
       },
     });
+    await this.activityLogService.createLog(
+      'PRODUCT_DELETE',
+      `${product.nom_produit} supprimé`,
+      'product ',
+      product.id_produit,
+      userId,
+    );
   }
 }

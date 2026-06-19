@@ -169,3 +169,16 @@ model PanierItem{
 }
 
 
+model ActivityLog {
+  id_activity          Int      @id @default(autoincrement())
+  type                 String
+  message              String
+  entityType           String?
+  entityId             Int?
+  userId               Int?
+  createdAt            DateTime @default(now())
+}
+
+
+
+

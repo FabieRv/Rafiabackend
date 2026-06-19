@@ -2,12 +2,16 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { PrismaService } from 'src/user/prisma.service';
+import { ActivityLogService } from 'src/activity/activity-log.service';
 
 @Injectable()
 export class ClientsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private activityLogService: ActivityLogService,
+  ) {}
 
-  async create(createClientDto: CreateClientDto) {
+  async create(createClientDto: CreateClientDto, userId: number) {
     const newClient = await this.prisma.user.create({
       data: { ...createClientDto, role: 'USER' },
       select: {
@@ -18,6 +22,14 @@ export class ClientsService {
         createdAt: true,
       },
     });
+
+    await this.activityLogService.createLog(
+      'CLIENT_CREATED',
+      `Client ${newClient.name} crée`,
+      'user',
+      newClient.id_user,
+      userId,
+    );
     return JSON.parse(JSON.stringify(newClient));
   }
 
@@ -58,22 +70,37 @@ export class ClientsService {
     return JSON.parse(JSON.stringify(client));
   }
 
-  async update(id: number, updateClientDto: UpdateClientDto) {
+  async update(id: number, updateClientDto: UpdateClientDto, userId: number) {
     await this.findOne(id);
     const updated = await this.prisma.user.update({
       where: { id_user: id },
       data: updateClientDto,
       select: { id_user: true, name: true, email: true },
     });
+
+    await this.activityLogService.createLog(
+      'CLIENT_UPDATED',
+      `Client ${updated.name} modifié`,
+      'user',
+      updated.id_user,
+      userId,
+    );
     return JSON.parse(JSON.stringify(updated));
   }
-  async remove(id: number) {
+
+  async remove(id: number, userId: number) {
     await this.findOne(id);
 
     const deleted = await this.prisma.user.delete({
       where: { id_user: id },
     });
-
+    await this.activityLogService.createLog(
+      'CLIENT_DELETED',
+      `Client ${deleted.name} supprimé`,
+      'user',
+      deleted.id_user,
+      userId,
+    );
     return { message: `Client ${id} supprimé`, deleted };
   }
 }

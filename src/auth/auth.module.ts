@@ -5,9 +5,11 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../user/prisma.service'; //chemin prisma
 import { JwtStrategy } from '../middleware/jwt.strategy';
+import { ActivityLogModule } from 'src/activity/activity-log.module';
 
 @Module({
   imports: [
+    ActivityLogModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

@@ -9,6 +9,7 @@ import {
   Patch,
   Query,
   ParseIntPipe,
+  Req,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDtoRequest } from './dto/create-product.dto';
@@ -40,12 +41,15 @@ export class ProductController {
     };
   }
 
-
   //GET
   @UseGuards(JwtAuthGuard)
   @Post('add')
-  async create(@Body() createProductDtoRequest: CreateProductDtoRequest) {
-    return await this.productService.create(createProductDtoRequest);
+  async create(
+    @Body() createProductDtoRequest: CreateProductDtoRequest,
+    @Req() req,
+  ) {
+    const userId = req.user.userId;
+    return await this.productService.create(createProductDtoRequest, userId);
   }
 
   // MODIFIER (Protégé par JWT)
@@ -54,12 +58,33 @@ export class ProductController {
   async update(
     @Param('id') id: string,
     @Body() updateDto: Partial<CreateProductDtoRequest>,
+    @Req() req,
   ) {
-    await this.productService.update(+id, updateDto);
+    console.log(
+      '=== 🛰️ [BACKEND CONTROLLER] PATCH /products/:id TRIGGERED ===',
+    );
+    console.log('ID du produit ciblé (param) :', id);
+    console.log('Payload partiel reçu (@Body) :', updateDto);
+    console.log('Utilisateur extrait du Guard (req.user) :', req.user);
+
+    const userId = req.user?.userId;
+    if (!userId) {
+      console.error(
+        "❌ [ERROR] Le userId n'a pas pu être extrait de req.user. Vérifiez votre JwtStrategy.",
+      );
+    }
+
+    const updatedProduct = await this.productService.update(
+      +id,
+      updateDto,
+      userId,
+    );
+    console.log('✅ [BACKEND CONTROLLER] Traitement terminé avec succès.');
     return {
       message: 'Produit mis à jour avec succès',
       id_modifie: +id,
       statusCode: 200,
+      product: updatedProduct,
     };
   }
 
@@ -67,8 +92,9 @@ export class ProductController {
   @UseGuards(JwtAuthGuard)
   @Roles('admin')
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.productService.remove(+id);
+  async remove(@Param('id') id: string, @Req() req) {
+    const userId = req.user.userId;
+    await this.productService.remove(+id, userId);
 
     return {
       message: 'Produit supprimé avec succès',

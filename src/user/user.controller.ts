@@ -28,18 +28,18 @@ export class UserController {
     const count = await this.userService.countUsers();
     return { count };
   }
-  //prend un user
-  @UseGuards(JwtAuthGuard)
-  @Get(':userId')
-  getUser(@Param('userId') userId: string) {
-    return this.userService.getUsers();
-  }
-
   //gerer profil
   @UseGuards(JwtAuthGuard)
   @Get('/profile')
   getProfile() {
     return 'test ok';
+  }
+
+  //prend un user
+  @UseGuards(JwtAuthGuard)
+  @Get(':userId')
+  getUser(@Param('userId') userId: string) {
+    return this.userService.getUsers();
   }
 
   //gerer avatar image

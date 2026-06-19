@@ -8,6 +8,7 @@ import {
   UseGuards,
   ParseIntPipe,
   Delete,
+  Req,
 } from '@nestjs/common';
 
 import { CommandeService } from './commande.service';
@@ -32,6 +33,15 @@ export class CommandeAdminController {
     return this.commandeService.countCommandes();
   }
 
+  @Get('totalventes')
+  async countAllTotalventecommande() {
+    console.log('🔥 NEW VERSION ACTIVE');
+
+    const totalArticles = await this.commandeService.getTotalVentesCount();
+
+    return totalArticles;
+  }
+
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     console.log('🔥 HIT COMMANDE ID-------- =', id);
@@ -42,8 +52,9 @@ export class CommandeAdminController {
   updateStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateStatusDto: UpdateStatusDto,
+    @Req() req,
   ) {
-    return this.commandeService.updateStatus(id, updateStatusDto);
+    return this.commandeService.updateStatus(id, updateStatusDto, req.user.id);
   }
 
   @Delete(':id')

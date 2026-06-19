@@ -10,12 +10,14 @@ import { PrismaService } from 'src/user/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Role, User } from '@prisma/client';
+import { ActivityLogService } from 'src/activity/activity-log.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private jwtService: JwtService,
+    private activityLogService: ActivityLogService,
   ) {
     console.log('JWT SERVICE READY');
   }
@@ -56,6 +58,15 @@ export class AuthService {
           image: imagePath,
         },
       });
+
+      await this.activityLogService.createLog(
+        'USER_REGISTER',
+        `Utilisateur ${newUser.name}inscrit`,
+        'user',
+        newUser.id_user,
+        newUser.id_user,
+      );
+
       const { password: _, ...userWithoutPassword } = newUser;
       return userWithoutPassword;
     } catch (err) {
@@ -85,6 +96,15 @@ export class AuthService {
     if (!isValid) {
       throw new UnauthorizedException('le mot de pass est invalide');
     }
+
+    await this.activityLogService.createLog(
+      'USER_LOGIN',
+      `Utilisateur ${existingUser.name} connecté`,
+      'user',
+      existingUser.id_user,
+      existingUser.id_user,
+    );
+
     return this.authenticateUser({
       userId: existingUser.id_user,
       role: existingUser.role,
@@ -150,6 +170,15 @@ export class AuthService {
         where: { id_user: userId },
         data: { password: hashedNewPassword },
       });
+
+      //activity password
+      await this.activityLogService.createLog(
+        'PASSWORD_CHANGED',
+        `Mot de passe modifié`,
+        'user',
+        userId,
+        userId,
+      );
 
       return { message: 'Mot de passe changé avec succès' };
     } catch (error) {

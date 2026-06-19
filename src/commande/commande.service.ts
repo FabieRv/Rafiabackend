@@ -6,10 +6,21 @@ import {
 import { PrismaService } from 'src/user/prisma.service';
 import { CommandeStatus } from '@prisma/client';
 import { UpdateStatusDto } from './dto/update.status.dto';
+import { ActivityLogService } from 'src/activity/activity-log.service';
 
 @Injectable()
 export class CommandeService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private activityLogService: ActivityLogService,
+  ) {}
+
+  activityMap: Record<string, string> = {
+    CONFIRMEE: 'ORDER_CONFIRME',
+    NEGOCIEE: 'ORDER_NEGOCIEE',
+    LIVREE: 'ORDER_LIVREE',
+    ANNULEE: 'ORDER_ANNULEE',
+  };
 
   // AJOUT AU PANIER
   async addToCart(userId: number, productId: number, quantity: number) {
@@ -74,7 +85,7 @@ export class CommandeService {
     const totalTTC = totalHT + totalHT * TVA_RATE;
 
     return this.prisma.$transaction(async (tx) => {
-      return tx.commande.create({
+      const commande = await tx.commande.create({
         data: {
           adresse_livraison,
           ville,
@@ -91,13 +102,21 @@ export class CommandeService {
               id_produit: item.id_produit,
               quantite: item.quantite,
               prix: item.prix,
-
               product_name_snapshot: item.product_name ?? null,
               product_price_snapshot: item.prix,
             })),
           },
         },
       });
+
+      await this.activityLogService.createLog(
+        'ORDER_CREATED',
+        `Commande CMD ${commande.id_commande} crée`,
+        'order',
+        commande.id_commande,
+        userId,
+      );
+      return commande;
     });
   }
 
@@ -143,6 +162,7 @@ export class CommandeService {
     };
   }
 
+  //changement d'etat admin
   async findAllForAdmin(status?: string) {
     const queryFilter: any = {};
 
@@ -154,8 +174,6 @@ export class CommandeService {
     }
 
     try {
-      console.log('🔥 FIND ALL ADMIN START');
-
       const commandes = await this.prisma.commande.findMany({
         where: queryFilter,
         include: {
@@ -174,8 +192,6 @@ export class CommandeService {
           createdAt: 'desc',
         },
       });
-
-      console.log('🔥 COMMANDES FOUND =', commandes?.length);
 
       return (commandes || []).map((cmd) => ({
         ...cmd,
@@ -201,13 +217,15 @@ export class CommandeService {
         })),
       }));
     } catch (error) {
-      console.log('❌ ERROR findAllForAdmin');
-      console.error(error);
       throw error;
     }
   }
 
-  async updateStatus(id: number, updateStatusDto: UpdateStatusDto) {
+  async updateStatus(
+    id: number,
+    updateStatusDto: UpdateStatusDto,
+    userId: number,
+  ) {
     const existingCommande = await this.prisma.commande.findUnique({
       where: { id_commande: id },
     });
@@ -216,7 +234,7 @@ export class CommandeService {
       throw new NotFoundException(`Commande ${id} introuvable`);
     }
 
-    return this.prisma.commande.update({
+    const commande = await this.prisma.commande.update({
       where: { id_commande: id },
       data: {
         statut: updateStatusDto.status,
@@ -226,6 +244,20 @@ export class CommandeService {
         items: true,
       },
     });
+
+    const activityType = this.activityMap[updateStatusDto.status];
+
+    if (activityType) {
+      await this.activityLogService.createLog(
+        activityType,
+        `Commande ${updateStatusDto.status.toLowerCase()}`,
+        'order',
+        commande.id_commande,
+        userId,
+      );
+    }
+
+    return commande;
   }
 
   async countCommandes() {
@@ -240,5 +272,23 @@ export class CommandeService {
     return this.prisma.commande.delete({
       where: { id_commande: id },
     });
+  }
+
+  async getTotalVentesCount(): Promise<number> {
+    const result = await this.prisma.commandeItem.aggregate({
+      where: {
+        commande: {
+          statut: 'LIVREE',
+        },
+        quantite: {
+          not: null,
+        },
+      },
+      _sum: {
+        quantite: true,
+      },
+    });
+
+    return Number(result._sum?.quantite ?? 0);
   }
 }
