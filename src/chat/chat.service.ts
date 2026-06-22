@@ -29,21 +29,21 @@ export class ChatService {
     };
   }
 
-  async getOrCreateConversation(adminId: number, userId: number) {
+  async getOrCreateConversation(senderId: number, receiverId: number) {
     const conversation = await this.prisma.conversation.findFirst({
       where: {
         AND: [
           {
             users: {
               some: {
-                id_user: adminId,
+                id_user: senderId,
               },
             },
           },
           {
             users: {
               some: {
-                id_user: userId,
+                id_user: receiverId,
               },
             },
           },
@@ -61,12 +61,45 @@ export class ChatService {
     return this.prisma.conversation.create({
       data: {
         users: {
-          connect: [{ id_user: adminId }, { id_user: userId }],
+          connect: [{ id_user: senderId }, { id_user: receiverId }],
         },
       },
       include: {
         users: true,
       },
+    });
+  }
+
+  async getAllConversations() {
+    return this.prisma.conversation.findMany({
+      include: {
+        users: true,
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1, // dernier message
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getUserConversations(userId: number) {
+    return this.prisma.conversation.findMany({
+      where: {
+        users: {
+          some: {
+            id_user: userId,
+          },
+        },
+      },
+      include: {
+        users: true,
+        messages: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     });
   }
 

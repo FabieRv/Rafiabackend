@@ -197,6 +197,9 @@ model Message {
   sender         User          @relation(fields: [senderId], references: [id_user])
   conversation   Conversation  @relation(fields: [conversationId], references: [id])
 
+  isRead         Boolean      @default(false)
+  readAt         DateTime?
+
   createdAt      DateTime      @default(now())
 }
 

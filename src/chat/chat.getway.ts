@@ -47,12 +47,12 @@ export class ChatGateway {
 
   @SubscribeMessage('sendMessage')
   async handleMessage(
-    @MessageBody() data: { userId: number; adminId: number; content: string },
+    @MessageBody() data: { senderId: number; receiverId: number; content: string },
   ) {
     console.log('MESSAGE REÇU:', data);
     const result = await this.chatService.startConversation(
-      data.userId,
-      data.adminId,
+      data.senderId,
+      data.receiverId,
       data.content,
     );
 
