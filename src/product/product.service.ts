@@ -130,11 +130,22 @@ export class ProductService {
     data: Partial<CreateProductDtoRequest>,
     userId: number,
   ) {
+    console.log('------------DATA------------' + JSON.stringify(data));
     try {
+      const cleanData = {
+        nom_produit: data.nom_produit,
+        description: data.description,
+        type: data.type,
+        prix: data.prix,
+        quantite_stock: data.quantite_stock,
+        image: data.image,
+        id_sous_categorie: data.id_sous_categorie,
+      };
+
       const cleanUserId = Number(userId);
       const product = await this.prisma.product.update({
         where: { id_produit: id },
-        data,
+        data: cleanData,
       });
 
       const log = await this.activityLogService.createLog(
