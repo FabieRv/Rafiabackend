@@ -5,6 +5,7 @@ export class CreateProductDtoRequest {
   prix: number;
   quantite_stock: number;
   image: string;
+  categorie: number;
   id_sous_categorie: number;
   isEdit?: boolean;
 }
