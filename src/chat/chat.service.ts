@@ -130,4 +130,44 @@ export class ChatService {
       },
     });
   }
+
+  async openConversation(userId: number) {
+    const admin = await this.prisma.user.findFirst({
+      where: { role: 'ADMIN' },
+    });
+
+    if (!admin) {
+      throw new Error('Admin introuvable');
+    }
+
+    let conversation = await this.prisma.conversation.findFirst({
+      where: {
+        users: {
+          some: { id_user: userId },
+        },
+      },
+      include: {
+        users: true,
+        messages: {
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    if (!conversation) {
+      conversation = await this.prisma.conversation.create({
+        data: {
+          users: {
+            connect: [{ id_user: userId }, { id_user: admin.id_user }],
+          },
+        },
+        include: {
+          users: true,
+          messages: true,
+        },
+      });
+    }
+
+    return conversation;
+  }
 }

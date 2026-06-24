@@ -48,6 +48,10 @@ export class ProductController {
     @Body() createProductDtoRequest: CreateProductDtoRequest,
     @Req() req,
   ) {
+    console.log(
+      '---------createProductDtoRequest-----------' +
+        JSON.stringify(createProductDtoRequest),
+    );
     const userId = req.user.userId;
     return await this.productService.create(createProductDtoRequest, userId);
   }

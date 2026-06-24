@@ -42,12 +42,17 @@ export class ChatGateway {
   }
 
   handleDisconnect(client: Socket) {
-    console.log('❌ Client disconnected:', client.id);
+    console.log('Client disconnected:', client.id);
   }
 
   @SubscribeMessage('sendMessage')
   async handleMessage(
-    @MessageBody() data: { senderId: number; receiverId: number; content: string },
+    @MessageBody()
+    data: {
+      senderId: number;
+      receiverId: number;
+      content: string;
+    },
   ) {
     console.log('MESSAGE REÇU:', data);
     const result = await this.chatService.startConversation(
