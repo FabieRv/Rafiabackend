@@ -11,6 +11,7 @@ import { CatalogueModule } from './catalogue/catalogue.module';
 import { CommandeModule } from './commande/commande.module';
 import { ActivityLogModule } from './activity/activity-log.module';
 import { ChatModule } from './chat/chat.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ChatModule } from './chat/chat.module';
     CatalogueModule,
     ChatModule,
     ActivityLogModule,
+    MailModule
   ],
   controllers: [],
   providers: [],

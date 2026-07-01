@@ -202,4 +202,3 @@ model Message {
 
   createdAt      DateTime      @default(now())
 }
-

@@ -1,0 +1,6 @@
+{
+    "terminal.integrated.env.windows": {
+        "PATH": "C:\\Users\\aug\\Documents\\node\\node-v24.17.0-win-x64;${env:PATH}"
+    },
+    "terminal.integrated.defaultProfile.windows": "Command Prompt"
+}

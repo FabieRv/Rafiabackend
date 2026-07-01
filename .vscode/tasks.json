@@ -1,0 +1,18 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Node 24 Terminal",
+            "type": "shell",
+            "command": "cmd.exe",
+            "args": [
+                "/k",
+                "set PATH=C:\\Users\\aug\\Documents\\node\\node-v24.17.0-win-x64;%PATH%"
+            ],
+            "problemMatcher": [
+                "$tsc-watch"
+            ],
+            "isBackground": true
+        }
+    ]
+}
