@@ -22,6 +22,24 @@ export class CommandeService {
     ANNULEE: 'ORDER_ANNULEE',
   };
 
+  FINAL_STATUTS: CommandeStatus[] = [
+    CommandeStatus.LIVREE,
+    CommandeStatus.ANNULEE,
+  ];
+
+// L'état initial de ta machine à états dans commande.service.ts
+private readonly ALLOWED_TRANSITIONS: Record<string, string[]> = {
+  EN_ATTENTE: ['NEGOCIEE', 'CONFIRMEE', 'ANNULEE'],
+  NEGOCIEE: ['CONFIRMEE', 'ANNULEE'],
+  
+  // ICI : On autorise le passage de CONFIRMEE à ANNULEE ou LIVREE
+  CONFIRMEE: ['LIVREE', 'ANNULEE'], 
+  
+  // États finaux absolus : Aucun retour ou changement possible
+  LIVREE: [],
+  ANNULEE: [],
+};
+
   // AJOUT AU PANIER
   async addToCart(userId: number, productId: number, quantity: number) {
     let panier = await this.prisma.panier.findUnique({
@@ -232,6 +250,37 @@ export class CommandeService {
 
     if (!existingCommande) {
       throw new NotFoundException(`Commande ${id} introuvable`);
+    }
+
+    //block statut
+    if (this.FINAL_STATUTS.includes(existingCommande.statut)) {
+      throw new BadRequestException(
+        'Impossible de modifier une commande livré ou annulée',
+      );
+    }
+
+    //validation status demandé
+    if (
+      !Object.values(CommandeStatus).includes(
+        updateStatusDto.status as CommandeStatus,
+      )
+    ) {
+      throw new BadRequestException('Statut invalide');
+    }
+
+    // if (
+    //   existingCommande.statut === CommandeStatus.CONFIRMEE &&
+    //   updateStatusDto.status === CommandeStatus.EN_ATTENTE
+    // ) {
+    //   throw new BadRequestException('Retour en arrière interdit');
+    // }
+
+    if (
+      !this.ALLOWED_TRANSITIONS[existingCommande.statut].includes(
+        updateStatusDto.status as CommandeStatus,
+      )
+    ) {
+      throw new BadRequestException('Transition de statut interdite');
     }
 
     const commande = await this.prisma.commande.update({
