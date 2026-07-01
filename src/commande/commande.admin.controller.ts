@@ -44,7 +44,6 @@ export class CommandeAdminController {
 
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
-    console.log('🔥 HIT COMMANDE ID-------- =', id);
     return this.commandeService.findOneForAdmin(id);
   }
 
