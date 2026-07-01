@@ -31,7 +31,7 @@ import { MailModule } from './mail/mail.module';
     CatalogueModule,
     ChatModule,
     ActivityLogModule,
-    MailModule
+    MailModule,
   ],
   controllers: [],
   providers: [],

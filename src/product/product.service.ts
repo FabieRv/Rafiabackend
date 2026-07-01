@@ -14,6 +14,26 @@ export class ProductService {
   // CREATE
   async create(data: CreateProductDtoRequest, userId: number) {
     try {
+      const categorieAdd = await this.prisma.category.findUnique({
+        where: {
+          id_categorie: data.categorie,
+        },
+        include: {
+          sous_categories: {
+            orderBy: {
+              id_sous_categorie: 'asc',
+            },
+          },
+        },
+      });
+
+      const sousCategorie =
+        categorieAdd?.sous_categories[data.id_sous_categorie - 1];
+
+      console.log(
+        '-------------sousCategorie-----------' + JSON.stringify(sousCategorie),
+      );
+
       const product = await this.prisma.product.create({
         data: {
           nom_produit: data.nom_produit,
@@ -24,7 +44,7 @@ export class ProductService {
           image: data.image,
           sous_category: {
             connect: {
-              id_sous_categorie: Number(data.id_sous_categorie),
+              id_sous_categorie: Number(sousCategorie?.id_sous_categorie),
             },
           },
         },
@@ -164,17 +184,14 @@ export class ProductService {
 
   // DELETE
   async remove(id: number, userId: number) {
-    const product = await this.prisma.product.update({
+    const product = await this.prisma.product.delete({
       where: { id_produit: id },
-      data: {
-        is_active: false,
-      },
     });
     await this.activityLogService.createLog(
       'PRODUCT_DELETE',
-      `${product.nom_produit} supprimé`,
+      `produit n°${id} supprimé`,
       'product ',
-      product.id_produit,
+      id,
       userId,
     );
   }

@@ -1,4 +1,12 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
+
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from 'src/middleware/jwt-auth.guard';
 
@@ -9,15 +17,33 @@ export class ChatController {
   @UseGuards(JwtAuthGuard)
   @Get('messages/:adminId/:userId')
   async getMessages(
-    @Param('adminId') adminId: number,
-    @Param('userId') userId: number,
+    @Param('adminId') adminId: string,
+    @Param('userId') userId: string,
   ) {
+    const aId = Number(adminId);
+    const uId = Number(userId);
+    if (isNaN(aId) || isNaN(uId)) {
+      throw new Error(`Invalid IDs: adminId=${adminId}, userId=${userId}`);
+    }
+
     const conversation = await this.chatService.getOrCreateConversation(
-      Number(adminId),
-      Number(userId),
+      aId,
+      uId,
     );
+    // const conversation = await this.chatService.getOrCreateConversation(
+    //   Number(adminId),
+
+    //   Number(userId),
+    // );
+    console.log('adminId RAW:', adminId);
+    console.log('userId RAW:', userId);
+
     return this.chatService.getMessages(conversation.id);
   }
+  // @Get('messages/:conversationId')
+  // async getMessages(@Param('conversationId') conversationId: string) {
+  //   return this.chatService.getMessages(conversationId);
+  // }
 
   @UseGuards(JwtAuthGuard)
   @Get('conversations/:userId')
@@ -30,5 +56,12 @@ export class ChatController {
   async getAdminConversations() {
     console.log('-----------CHAT ------');
     return this.chatService.getAllConversations();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('open')
+  async openChat(@Request() req) {
+    const userId = req.user.id_user;
+    return this.chatService.openConversation(userId);
   }
 }
