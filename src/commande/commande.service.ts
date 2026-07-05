@@ -1,3 +1,4 @@
+import { EmailService } from './../mail/mail.service';
 import {
   BadRequestException,
   Injectable,
@@ -13,6 +14,7 @@ export class CommandeService {
   constructor(
     private prisma: PrismaService,
     private activityLogService: ActivityLogService,
+    private emailService: EmailService,
   ) {}
 
   activityMap: Record<string, string> = {
@@ -27,18 +29,18 @@ export class CommandeService {
     CommandeStatus.ANNULEE,
   ];
 
-// L'état initial de ta machine à états dans commande.service.ts
-private readonly ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  EN_ATTENTE: ['NEGOCIEE', 'CONFIRMEE', 'ANNULEE'],
-  NEGOCIEE: ['CONFIRMEE', 'ANNULEE'],
-  
-  // ICI : On autorise le passage de CONFIRMEE à ANNULEE ou LIVREE
-  CONFIRMEE: ['LIVREE', 'ANNULEE'], 
-  
-  // États finaux absolus : Aucun retour ou changement possible
-  LIVREE: [],
-  ANNULEE: [],
-};
+  // L'état initial de ta machine à états dans commande.service.ts
+  private readonly ALLOWED_TRANSITIONS: Record<string, string[]> = {
+    EN_ATTENTE: ['NEGOCIEE', 'CONFIRMEE', 'ANNULEE'],
+    NEGOCIEE: ['CONFIRMEE', 'ANNULEE'],
+
+    // ICI : On autorise le passage de CONFIRMEE à ANNULEE ou LIVREE
+    CONFIRMEE: ['LIVREE', 'ANNULEE'],
+
+    // États finaux absolus : Aucun retour ou changement possible
+    LIVREE: [],
+    ANNULEE: [],
+  };
 
   // AJOUT AU PANIER
   async addToCart(userId: number, productId: number, quantity: number) {
@@ -268,11 +270,11 @@ private readonly ALLOWED_TRANSITIONS: Record<string, string[]> = {
       throw new BadRequestException('Statut invalide');
     }
 
-    // if (
-    //   existingCommande.statut === CommandeStatus.CONFIRMEE &&
-    //   updateStatusDto.status === CommandeStatus.EN_ATTENTE
-    // ) {
-    //   throw new BadRequestException('Retour en arrière interdit');
+    // if (existingCommande.statut === updateStatusDto.status) {
+    //   return {
+    //     success: false,
+    //     message: 'Le statut est déjà celui-ci.',
+    //   };
     // }
 
     if (
@@ -280,7 +282,9 @@ private readonly ALLOWED_TRANSITIONS: Record<string, string[]> = {
         updateStatusDto.status as CommandeStatus,
       )
     ) {
-      throw new BadRequestException('Transition de statut interdite');
+      throw new BadRequestException(
+        'Mise à jour échoué car status déjà ' + existingCommande.statut,
+      );
     }
 
     const commande = await this.prisma.commande.update({
@@ -305,6 +309,19 @@ private readonly ALLOWED_TRANSITIONS: Record<string, string[]> = {
         userId,
       );
     }
+    // const user = await this.prisma.user.findUnique({
+    //   where: {
+    //     id_user: userId,
+    //   },
+    // });
+
+    // if (user?.email)
+    //   this.emailService.sendMailConfirmation(
+    //     user.email,
+    //     user.name,
+    //     commande.id_commande,
+    //     updateStatusDto.status,
+    //   );
 
     return commande;
   }
