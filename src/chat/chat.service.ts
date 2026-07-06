@@ -1,14 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async startConversation(
+  async sendMessage(
     senderId: number,
     receiverId: number,
-    content: string,
+    content
   ) {
     const conversation = await this.getOrCreateConversation(
       senderId,
@@ -17,8 +17,8 @@ export class ChatService {
 
     const message = await this.prisma.message.create({
       data: {
-        content,
         senderId,
+        content,
         conversationId: conversation.id,
       },
     });
@@ -103,6 +103,8 @@ export class ChatService {
     });
   }
 
+  
+
   /*async sendMessage(data: {
         content: string;
         senderId: number;
@@ -128,6 +130,63 @@ export class ChatService {
       orderBy: {
         createdAt: 'asc',
       },
+    });
+  }
+
+  async getMessagesByConversationId(conversationId: string) {
+    // 1. Vérifier si la conversation existe
+    const conversation = await this.prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: {
+        users: {
+          select: {
+            id_user: true,
+            email: true,
+            // Ajoutez ici d'autres champs de l'utilisateur si nécessaire (ex: nom, role)
+          },
+        },
+      },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException("Cette conversation n'existe pas.");
+    }
+
+    // 2. Récupérer les messages avec les détails sender et le contenu
+    const messages = await this.prisma.message.findMany({
+      where: {
+        conversationId: conversationId,
+      },
+      include: {
+        sender: {
+          select: {
+            id_user: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc', // Ordre chronologique pour le tchat
+      },
+    });
+
+    // 3. Formater la réponse pour inclure explicitement le 'receiver' dans chaque message
+    // (Le destinataire est l'utilisateur de la conversation qui n'est pas le sender)
+    return messages.map((msg) => {
+      const receiver = conversation.users.find(
+        (user) => user.id_user !== msg.senderId
+      );
+
+      return {
+        id: msg.id,
+        content: msg.content,
+        conversationId: msg.conversationId,
+        createdAt: msg.createdAt,
+        isRead: msg.isRead,
+        readAt: msg.readAt,
+        sender: msg.sender,       // L'objet complet du Sender
+        receiver: receiver || null, // L'objet complet du Receiver
+      };
     });
   }
 

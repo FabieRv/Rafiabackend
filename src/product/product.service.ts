@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { CreateProductDtoRequest } from './dto/create-product.dto';
 import { ActivityLogService } from 'src/activity/activity-log.service';
@@ -16,7 +16,7 @@ export class ProductService {
     try {
       const categorieAdd = await this.prisma.category.findUnique({
         where: {
-          id_categorie: data.categorie,
+          id_categorie: Number(data.categorie),
         },
         include: {
           sous_categories: {
@@ -152,14 +152,61 @@ export class ProductService {
   ) {
     console.log('------------DATA------------' + JSON.stringify(data));
     try {
+      console.log('------------DATA------------' + JSON.stringify(data));
+
+      // 1. Convertir explicitement les IDs reçus en vrais nombres
+      const categorieId = Number(data.categorie);
+
+      // CORRECTION 1 : AJOUT DE AWAIT ICI
+      const sousCategoryList = await this.prisma.sousCategory.findMany({
+        where: { id_categorie: categorieId },
+      });
+
+      console.log(
+        '------------LISTE REÇUE BDD------------' +
+          JSON.stringify(sousCategoryList),
+      );
+
+      if (!data.id_sous_categorie) {
+        throw new BadRequestException("Sous categorie n'existe pas");
+      }
+
+      // CORRECTION 2 : On s'assure que l'index existe dans le tableau reçu
+      const index = Number(data.id_sous_categorie) - 1;
+      const sousCategorie = sousCategoryList[index];
+
+      if (!sousCategorie) {
+        throw new BadRequestException(
+          `Aucune sous-catégorie trouvée à l'index ${index} pour cette catégorie.`,
+        );
+      }
+
+      const sousCategorieId = Number(sousCategorie.id_sous_categorie);
+      const prixNumeric = Number(data.prix);
+      const quantiteNumeric = Number(data.quantite_stock);
+
+      console.log(
+        '-------------sousCategorie finale-----------' +
+          JSON.stringify(sousCategorie),
+      );
+
+      if (!sousCategorie) {
+        throw new BadRequestException(
+          "La sous-catégorie spécifiée n'existe pas.",
+        );
+      }
+
+      console.log(
+        '-------------sousCategorie-----------' + JSON.stringify(sousCategorie),
+      );
       const cleanData = {
         nom_produit: data.nom_produit,
         description: data.description,
         type: data.type,
-        prix: data.prix,
-        quantite_stock: data.quantite_stock,
+        prix: prixNumeric,
+        quantite_stock: Number(data.quantite_stock),
         image: data.image,
-        id_sous_categorie: data.id_sous_categorie,
+        id_sous_categorie: Number(sousCategorieId),
       };
 
       const cleanUserId = Number(userId);
