@@ -15,35 +15,21 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @UseGuards(JwtAuthGuard)
-  @Get('messages/:adminId/:userId')
-  async getMessages(
-    @Param('adminId') adminId: string,
-    @Param('userId') userId: string,
+  @Get('messages/:senderId/:receiverId')
+  async getOrCreateChat(
+    @Param('senderId') senderId: string,
+    @Param('receiverId') receiverId: string,
   ) {
-    const aId = Number(adminId);
-    const uId = Number(userId);
-    if (isNaN(aId) || isNaN(uId)) {
-      throw new Error(`Invalid IDs: adminId=${adminId}, userId=${userId}`);
-    }
-
-    const conversation = await this.chatService.getOrCreateConversation(
-      aId,
-      uId,
+    return this.chatService.getOrCreateConversation(
+      Number(senderId),
+      Number(receiverId),
     );
-    // const conversation = await this.chatService.getOrCreateConversation(
-    //   Number(adminId),
-
-    //   Number(userId),
-    // );
-    console.log('adminId RAW:', adminId);
-    console.log('userId RAW:', userId);
-
-    return this.chatService.getMessages(conversation.id);
   }
-  // @Get('messages/:conversationId')
-  // async getMessages(@Param('conversationId') conversationId: string) {
-  //   return this.chatService.getMessages(conversationId);
-  // }
+  @UseGuards(JwtAuthGuard)
+  @Get('conversation/:conversationId')
+  async getMessages(@Param('conversationId') conversationId: string) {
+    return this.chatService.getMessagesByConversationId(conversationId);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('conversations/:userId')
@@ -55,7 +41,13 @@ export class ChatController {
   @Get('admin/conversations')
   async getAdminConversations() {
     console.log('-----------CHAT ------');
-    return this.chatService.getAllConversations();
+    return this.chatService.getUserConversations(1);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('user/:userId')
+  async getMessagesByUser(@Param('userId') userId: string) {
+    return this.chatService.getUserConversations(Number(userId));
   }
 
   @UseGuards(JwtAuthGuard)

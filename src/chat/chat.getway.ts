@@ -55,7 +55,7 @@ export class ChatGateway {
     },
   ) {
     console.log('MESSAGE REÇU:', data);
-    const result = await this.chatService.startConversation(
+    const result = await this.chatService.sendMessage(
       data.senderId,
       data.receiverId,
       data.content,

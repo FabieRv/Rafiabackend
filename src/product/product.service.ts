@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 
 import { CreateProductDtoRequest } from './dto/create-product.dto';
 import { ActivityLogService } from 'src/activity/activity-log.service';
@@ -16,7 +16,7 @@ export class ProductService {
     try {
       const categorieAdd = await this.prisma.category.findUnique({
         where: {
-          id_categorie: data.categorie,
+          id_categorie: Number(data.categorie),
         },
         include: {
           sous_categories: {
@@ -49,8 +49,8 @@ export class ProductService {
           },
         },
       });
-      const STATUS = data.isEdit ? 'PRODUCT_UPDATED' : 'PRODUCT_CREATED';
-      const VALUE_MODIF = data.isEdit ? 'modifié' : 'créé';
+      const STATUS = 'PRODUCT_CREATED';
+      const VALUE_MODIF = 'créé';
       await this.activityLogService.createLog(
         STATUS,
         `${product.nom_produit} ${VALUE_MODIF}`,
@@ -147,19 +147,43 @@ export class ProductService {
   // UPDATE
   async update(
     id: number,
-    data: Partial<CreateProductDtoRequest>,
+    data: any, //Partial<CreateProductDtoRequest>
     userId: number,
   ) {
-    console.log('------------DATA------------' + JSON.stringify(data));
     try {
+      console.log('------------DATA------------' + JSON.stringify(data));
+
+      // 1. Convertir explicitement les IDs reçus en vrais nombres
+      const categorieId = Number(data.categorie);
+
+      if (!data.id_sous_categorie) {
+        throw new BadRequestException("Sous categorie n'existe pas");
+      }
+
+      // CORRECTION 2 : On s'assure que l'index existe dans le tableau reçu
+      const index = Number(data.id_sous_categorie);
+
+      const sousCategorieId = Number(data.id_sous_categorie);
+      const prixNumeric = Number(data.prix);
+      const quantiteNumeric = Number(data.quantite_stock);
+
+      console.log(
+        '-------------sousCategorie finale-----------' +
+          JSON.stringify(sousCategorieId),
+      );
+
+      console.log(
+        '-------------sousCategorie-----------' +
+          JSON.stringify(sousCategorieId),
+      );
       const cleanData = {
         nom_produit: data.nom_produit,
         description: data.description,
         type: data.type,
-        prix: data.prix,
-        quantite_stock: data.quantite_stock,
+        prix: prixNumeric,
+        quantite_stock: Number(data.quantite_stock),
         image: data.image,
-        id_sous_categorie: data.id_sous_categorie,
+        id_sous_categorie: Number(sousCategorieId),
       };
 
       const cleanUserId = Number(userId);
@@ -194,5 +218,13 @@ export class ProductService {
       id,
       userId,
     );
+  }
+
+  async findAllCategory() {
+    return await this.prisma.category.findMany();
+  }
+
+  async findAllSousCategorie() {
+    return await this.prisma.sousCategory.findMany();
   }
 }

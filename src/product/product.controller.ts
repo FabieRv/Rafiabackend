@@ -7,14 +7,18 @@ import {
   Delete,
   UseGuards,
   Patch,
+  UploadedFile,
   Query,
   ParseIntPipe,
   Req,
+  UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDtoRequest } from './dto/create-product.dto';
 import { JwtAuthGuard } from 'src/middleware/jwt-auth.guard';
 import { Roles } from 'src/middleware/roles.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('products')
 export class ProductController {
@@ -41,17 +45,21 @@ export class ProductController {
     };
   }
 
-  //GET
   @UseGuards(JwtAuthGuard)
   @Post('add')
+  @UseInterceptors(FileInterceptor('image'))
   async create(
-    @Body() createProductDtoRequest: CreateProductDtoRequest,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() createProductDtoRequest: any,
     @Req() req,
   ) {
-    console.log(
-      '---------createProductDtoRequest-----------' +
-        JSON.stringify(createProductDtoRequest),
-    );
+    console.log('o====================================on est ici');
+
+    if (!file) {
+      throw new BadRequestException('Image must not be void,it is required');
+    }
+
+    createProductDtoRequest.image = file.filename;
     const userId = req.user.userId;
     return await this.productService.create(createProductDtoRequest, userId);
   }
@@ -59,7 +67,9 @@ export class ProductController {
   // MODIFIER (Protégé par JWT)
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
+  @UseInterceptors(FileInterceptor('image'))
   async update(
+    @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
     @Body() updateDto: Partial<CreateProductDtoRequest>,
     @Req() req,
@@ -77,6 +87,7 @@ export class ProductController {
         "❌ [ERROR] Le userId n'a pas pu être extrait de req.user. Vérifiez votre JwtStrategy.",
       );
     }
+    if (file) updateDto.image = file.filename;
 
     const updatedProduct = await this.productService.update(
       +id,
@@ -109,5 +120,16 @@ export class ProductController {
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productService.findOne(id);
+  }
+
+  //GET CATEGORY
+  @Get('category/find')
+  getAllCategory() {
+    return this.productService.findAllCategory();
+  }
+
+  @Get('sous_category/find')
+  getAllSousCategorie() {
+    return this.productService.findAllSousCategorie();
   }
 }
