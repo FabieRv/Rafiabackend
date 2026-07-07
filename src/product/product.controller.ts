@@ -45,18 +45,20 @@ export class ProductController {
     };
   }
 
-  //GET
   @UseGuards(JwtAuthGuard)
   @Post('add')
   @UseInterceptors(FileInterceptor('image'))
   async create(
     @UploadedFile() file: Express.Multer.File,
-    @Body() createProductDtoRequest: CreateProductDtoRequest,
+    @Body() createProductDtoRequest: any,
     @Req() req,
   ) {
+    console.log('o====================================on est ici');
+
     if (!file) {
       throw new BadRequestException('Image must not be void,it is required');
     }
+
     createProductDtoRequest.image = file.filename;
     const userId = req.user.userId;
     return await this.productService.create(createProductDtoRequest, userId);
@@ -118,5 +120,16 @@ export class ProductController {
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productService.findOne(id);
+  }
+
+  //GET CATEGORY
+  @Get('category/find')
+  getAllCategory() {
+    return this.productService.findAllCategory();
+  }
+
+  @Get('sous_category/find')
+  getAllSousCategorie() {
+    return this.productService.findAllSousCategorie();
   }
 }
