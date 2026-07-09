@@ -208,6 +208,21 @@ export class ProductService {
 
   // DELETE
   async remove(id: number, userId: number) {
+    //verifier si le produit dans commande
+    const commandeItem = await this.prisma.commandeItem.findFirst({
+      where: {
+        id_produit: id,
+      },
+    });
+    console.log('Commande trouvée -----------ici:', commandeItem);
+    //block la suppression
+    if (commandeItem) {
+      throw new BadRequestException(
+        'Ce produit est présent dans une ou plusieurs commandes. Il ne peut pas être supprimé.',
+      );
+    }
+
+    //suppression le produit
     const product = await this.prisma.product.delete({
       where: { id_produit: id },
     });
@@ -218,6 +233,7 @@ export class ProductService {
       id,
       userId,
     );
+    return product;
   }
 
   async findAllCategory() {

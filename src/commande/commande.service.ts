@@ -151,7 +151,11 @@ export class CommandeService {
           include: {
             product: {
               include: {
-                sous_category: true,
+                sous_category: {
+                  include: {
+                    category: true,
+                  },
+                },
               },
             },
           },
