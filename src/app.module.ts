@@ -6,8 +6,12 @@ import { join } from 'path';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ProductModule } from './product/product.module';
 import { ClientsModule } from './clients/clients.module';
-import { CommandeModule } from './commande/commande.module';
+
 import { CatalogueModule } from './catalogue/catalogue.module';
+import { CommandeModule } from './commande/commande.module';
+import { ActivityLogModule } from './activity/activity-log.module';
+import { ChatModule } from './chat/chat.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -25,6 +29,9 @@ import { CatalogueModule } from './catalogue/catalogue.module';
     ClientsModule,
     CommandeModule,
     CatalogueModule,
+    ChatModule,
+    ActivityLogModule,
+    MailModule,
   ],
   controllers: [],
   providers: [],

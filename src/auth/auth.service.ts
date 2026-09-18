@@ -6,21 +6,23 @@ import {
 } from '@nestjs/common';
 
 import { AuthBody, CreateUser } from './auth.controller';
-import { PrismaService } from 'src/user/prisma.service';
+
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { Role, User } from '@prisma/client';
+import { ActivityLogService } from 'src/activity/activity-log.service';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private jwtService: JwtService,
+    private activityLogService: ActivityLogService,
   ) {
     console.log('JWT SERVICE READY');
   }
 
-  
   //register
   async register(authRegister: CreateUser) {
     try {
@@ -57,6 +59,15 @@ export class AuthService {
           image: imagePath,
         },
       });
+
+      await this.activityLogService.createLog(
+        'USER_REGISTER',
+        `Utilisateur ${newUser.name}inscrit`,
+        'user',
+        newUser.id_user,
+        newUser.id_user,
+      );
+
       const { password: _, ...userWithoutPassword } = newUser;
       return userWithoutPassword;
     } catch (err) {
@@ -86,10 +97,20 @@ export class AuthService {
     if (!isValid) {
       throw new UnauthorizedException('le mot de pass est invalide');
     }
+
+    await this.activityLogService.createLog(
+      'USER_LOGIN',
+      `Utilisateur ${existingUser.name} connecté`,
+      'user',
+      existingUser.id_user,
+      existingUser.id_user,
+    );
+
     return this.authenticateUser({
       userId: existingUser.id_user,
       role: existingUser.role,
       name: existingUser.name,
+      email: existingUser.email,
     });
   }
 
@@ -105,8 +126,9 @@ export class AuthService {
 
   private async authenticateUser(user: any) {
     const payload = {
-      sub: user.id_user,
+      userId: user.userId,
       role: user.role,
+      email: user.email,
     };
 
     return {
@@ -149,6 +171,15 @@ export class AuthService {
         where: { id_user: userId },
         data: { password: hashedNewPassword },
       });
+
+      //activity password
+      await this.activityLogService.createLog(
+        'PASSWORD_CHANGED',
+        `Mot de passe modifié`,
+        'user',
+        userId,
+        userId,
+      );
 
       return { message: 'Mot de passe changé avec succès' };
     } catch (error) {

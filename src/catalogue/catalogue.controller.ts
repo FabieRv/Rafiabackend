@@ -7,9 +7,9 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 
-import { PrismaService } from 'src/user/prisma.service';
 import * as path from 'path';
 import { Response } from 'express';
+import { PrismaService } from 'src/prisma.service';
 
 @Controller('catalogue')
 export class CatalogueController {

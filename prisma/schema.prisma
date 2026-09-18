@@ -20,9 +20,16 @@ enum StatutCatalogue {
 enum CommandeStatus{
   EN_ATTENTE           //PENDING 
   CONFIRMEE           //CONFIRMED 
-  EXPEDIEE            // SHIPPED   
+  NEGOCIEE            // NEGOCED   
   LIVREE              //DELIVERED 
   ANNULEE             //CANCELLED
+}
+ 
+enum StatutLivraison {
+  EN_PREPARATION
+  EN_COURS
+  LIVREE
+  ANNULEE
 }
 
 model User {
@@ -37,7 +44,10 @@ model User {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime?   @updatedAt
 
-  commandes  Commande[]
+  conversation    Conversation[]    @relation("ConversationUsers")
+  messages        Message[]
+  commandes       Commande[]
+  panier          Panier? 
 }
 
 model Type {
@@ -90,33 +100,105 @@ model Product {
   date_ajout         DateTime     @default(now())
   type               String?
 
+   is_active         Boolean       @default(true)
+
   id_sous_categorie  Int
-  sous_category      SousCategory @relation(fields: [id_sous_categorie], references: [id_sous_categorie])
+  sous_category      SousCategory   @relation(fields: [id_sous_categorie], references: [id_sous_categorie])
   commandeItems      CommandeItem[]
+  panierItems        PanierItem[]
 }
 
 
 
 model Commande{
-  id_commande          Int               @id @default(autoincrement())
+  id_commande          Int                @id @default(autoincrement())
+  id_user              Int
+
   total                Float 
   statut               CommandeStatus     @default(EN_ATTENTE)
-  id_user              Int
-  createdAt            DateTime           @default(now())
 
-  user                 User               @relation(fields: [id_user], references: [id_user])
-  items               CommandeItem[]
+  adresse_livraison    String
+  ville                String
+  region               String
+
+  statut_livraison      StatutLivraison    @default(EN_PREPARATION)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  user                 User                @relation(fields: [id_user], references: [id_user])
+  items                CommandeItem[]
 } 
 
 
 model CommandeItem{
-  id_commandeItem      Int              @id @default(autoincrement())
-  quantite_stock       Int
-  prix                 Float
+  id_commandeItem         Int              @id @default(autoincrement())
+  quantite                Int?              
+  prix                    Float
 
-  id_commande          Int
-  commande             Commande @relation(fields: [id_commande], references: [id_commande])
+  product_name_snapshot   String?
+  product_price_snapshot  Float?
 
-  id_produit           Int
-  product     Product  @relation(fields: [id_produit], references: [id_produit])
+  id_commande             Int
+  commande                Commande @relation(fields: [id_commande], references: [id_commande])
+
+  id_produit             Int?
+  product                Product? @relation(fields: [id_produit], references: [id_produit], onDelete: SetNull)
+
+}
+
+model Panier{
+  id_panier Int   @id @default(autoincrement ())
+  id_user   Int   @unique
+
+  user      User  @relation(fields: [id_user], references: [id_user])
+
+  items     PanierItem[]
+
+}
+
+model PanierItem{
+  id_panierItem Int @id @default(autoincrement())
+
+  id_panier     Int
+  panier        Panier  @relation(fields: [id_panier], references: [id_panier])
+
+  id_produit    Int
+  product       Product @relation(fields: [id_produit], references: [id_produit])
+
+  quantite      Int
+}
+
+
+model ActivityLog {
+  id_activity          Int      @id @default(autoincrement())
+  type                 String
+  message              String
+  entityType           String?
+  entityId             Int?
+  userId               Int?
+  createdAt            DateTime @default(now())
+}
+
+
+model Conversation {
+  id            String         @id @default(uuid())
+  users         User[]         @relation("ConversationUsers")
+  messages      Message[]
+  createdAt     DateTime       @default(now())
+}
+
+
+model Message {
+  id             String        @id @default(uuid())
+  content        String
+  senderId       Int
+  conversationId String
+
+  sender         User          @relation(fields: [senderId], references: [id_user])
+  conversation   Conversation  @relation(fields: [conversationId], references: [id])
+
+  isRead         Boolean      @default(false)
+  readAt         DateTime?
+
+  createdAt      DateTime      @default(now())
 }

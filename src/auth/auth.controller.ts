@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from '../middleware/jwt-auth.guard';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { LoginDto } from './dto/login.dto';
 
 export type AuthBody = {
   email: string;
@@ -30,9 +31,13 @@ export class AuthController {
   }
 
   //localhost:3000/login
+  // @Post('login')
+  // async login(@Body() authBody: AuthBody) {
+  //   return await this.authService.login(authBody);
+  // }
   @Post('login')
-  async login(@Body() authBody: AuthBody) {
-    return await this.authService.login(authBody);
+  async login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
   }
 
   //localhost:3000/change-password

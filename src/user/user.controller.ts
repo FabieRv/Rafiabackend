@@ -15,25 +15,34 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 @Controller('users')
 export class UserController {
-  constructor(private readonly UserService: UserService) {}
+  constructor(private readonly userService: UserService) {}
 
   @Get()
   getUsers() {
-    return this.UserService.getUsers();
+    return this.userService.getUsers();
   }
+  //count user
 
-  @UseGuards(JwtAuthGuard)
-  @Get(':userId')
-  getUser(@Param('userId') userId: string) {
-    return this.UserService.getUsers();
+  @Get('count')
+  async countUsers() {
+    const count = await this.userService.countUsers();
+    return { count };
   }
-
+  //gerer profil
   @UseGuards(JwtAuthGuard)
   @Get('/profile')
   getProfile() {
     return 'test ok';
   }
 
+  //prend un user
+  @UseGuards(JwtAuthGuard)
+  @Get(':userId')
+  getUser(@Param('userId') userId: string) {
+    return this.userService.getUsers();
+  }
+
+  //gerer avatar image
   @UseGuards(JwtAuthGuard)
   @Post('uploadimage')
   @UseInterceptors(
@@ -48,9 +57,6 @@ export class UserController {
     }),
   )
   async uploadImage(@UploadedFile() file: Express.Multer.File, @Req() req) {
-    console.log('USER:', req.user);
-    console.log('FILE:', file);
-
     return { ok: true };
   }
 }
